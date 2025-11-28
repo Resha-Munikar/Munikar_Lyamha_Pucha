@@ -21,7 +21,7 @@ body {
     align-items: center;
     justify-content: space-between;
     padding: 12px 40px; /* More space on left/right */
-    background: #b30000;
+    background: var(--red);
 }
 
 /* Logo */
@@ -110,12 +110,12 @@ body {
 .hero-btn {
     display: inline-block;
     margin-top: 20px;
-    padding: 10px 22px;
+    padding: 12px 28px;
     background: #ffcc00;
     color: #b30000;
-    font-size: 1.1rem;
     border-radius: 6px;
     font-weight: bold;
+    text-decoration: none;
     transition: 0.3s;
 }
 
@@ -124,10 +124,99 @@ body {
     color: #b30000;
 }
 
-/* ABOUT SECTION */
-.intro {
+/* WHO WE ARE SECTION */
+.wwa-section {
+    position: relative;
+    padding: 100px 20px;
+    background: var(--red);;
+    color: white;
+    overflow: hidden;
     text-align: center;
-    padding: 40px 20px;
+}
+
+.wwa-container {
+    position: relative;
+    z-index: 2; /* keep text above shapes */
+    max-width: 900px;
+    margin: auto;
+}
+
+.wwa-section h2 {
+    font-size: 3rem;
+    margin-bottom: 25px;
+    font-weight: 700;
+    text-shadow: 2px 2px 8px rgba(0,0,0,0.2);
+}
+
+.wwa-section p {
+    font-size: 1.2rem;
+    line-height: 1.8;
+    margin-bottom: 30px;
+    text-shadow: 1px 1px 6px rgba(0,0,0,0.2);
+}
+
+.wwa-btn {
+    display: inline-block;
+    background: white;
+    color: #b30000;
+    padding: 12px 28px;
+    border-radius: 6px;
+    font-weight: bold;
+    text-decoration: none;
+    transition: 0.3s;
+}
+
+.wwa-btn:hover {
+    background: #ffcc00;
+    color: #b30000;
+}
+
+/* Animated Background Shapes */
+.animated-bg span {
+    position: absolute;
+    display: block;
+    width: 60px;
+    height: 60px;
+    background: rgba(255, 204, 0, 0.5);
+    animation: float 20s linear infinite;
+    bottom: -80px;
+    border-radius: 50%;
+}
+
+/* Different positions, sizes, and durations */
+.animated-bg span:nth-child(1) { left: 5%; animation-duration: 18s; width: 50px; height: 50px; }
+.animated-bg span:nth-child(2) { left: 20%; animation-duration: 22s; width: 70px; height: 70px; }
+.animated-bg span:nth-child(3) { left: 35%; animation-duration: 25s; width: 60px; height: 60px; }
+.animated-bg span:nth-child(4) { left: 50%; animation-duration: 20s; width: 100px; height: 100px; }
+.animated-bg span:nth-child(5) { left: 65%; animation-duration: 28s; width: 40px; height: 40px; }
+.animated-bg span:nth-child(6) { left: 75%; animation-duration: 30s; width: 80px; height: 80px; }
+.animated-bg span:nth-child(7) { left: 85%; animation-duration: 24s; width: 55px; height: 55px; }
+.animated-bg span:nth-child(8) { left: 92%; animation-duration: 26s; width: 45px; height: 45px; }
+.animated-bg span:nth-child(9) { left: 40%; animation-duration: 32s; width: 65px; height: 65px; }
+.animated-bg span:nth-child(10) { left: 10%; animation-duration: 35s; width: 90px; height: 90px; }
+
+@keyframes float {
+    0% {
+        transform: translateY(0) rotate(0deg);
+        opacity: 0.5;
+    }
+    50% {
+        opacity: 0.8;
+    }
+    100% {
+        transform: translateY(-300px) rotate(360deg);
+        opacity: 0;
+    }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .wwa-section h2 {
+        font-size: 2.2rem;
+    }
+    .wwa-section p {
+        font-size: 1rem;
+    }
 }
 
 /* CULTURE GRID */

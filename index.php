@@ -6,18 +6,33 @@
     <div class="hero-content">
         <h1>Munikar Lyamha Pucha</h1>
         <p>Tied to Roots • Preserving Culture • Uniting Youths</p>
-        <a href="about.php" class="hero-btn">Learn More</a>
+        <a href="about.php" class="hero-btn">Discover More</a>
     </div>
 </section>
 
-<!-- ABOUT SECTION -->
-<section class="intro">
-    <h2>Who We Are</h2>
-    <p>
-        Munikar Lyamha Pucha is a youth-led community group dedicated to 
-        preserving Newari culture, organizing jatras, social events, 
-        cultural awareness programs, and promoting unity among the young generation.
-    </p>
+<!-- WHO WE ARE SECTION -->
+<section class="wwa-section">
+    <div class="animated-bg">
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+    </div>
+    <div class="wwa-container">
+        <h2>Who We Are</h2>
+        <p>
+            Munikar Lyamha Pucha is a community-driven youth organization dedicated 
+            to preserving culture, strengthening unity, and empowering young individuals 
+            through various cultural, social, and developmental activities.
+        </p>
+        <a href="about.php" class="wwa-btn">Learn More</a>
+    </div>
 </section>
 
 <!-- CULTURE HIGHLIGHTS SECTION -->
