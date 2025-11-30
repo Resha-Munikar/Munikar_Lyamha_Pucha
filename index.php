@@ -41,7 +41,7 @@
 
     <div class="culture-grid">
         <div class="culture-card">
-            <img src="images/jatra1.jpg" alt="Cultural Event">
+            <img src="images/jatra.jpg" alt="Cultural Event">
             <h3>Cultural Preservation</h3>
             <p>We work actively to preserve traditional rituals, festivals, and values.</p>
         </div>
@@ -53,10 +53,10 @@
         </div>
 
         <div class="culture-card">
-            <img src="images/community.jpg" alt="Community Work">
-            <h3>Community Service</h3>
-            <p>Helping the community through social work, cleaning campaigns, and support.</p>
-        </div>
+            <img src="images/training.jpg" alt="Training Programs">
+            <h3>Training & Skill Development</h3>
+            <p>We organize different workshops and classes to help youths learn and explore new abilities.</p>
+        </div>  
     </div>
 </section>
 
