@@ -37,12 +37,21 @@ body {
 }
 
 .logo-img {
-    height: 55px;
-    width: 55px;
-    border-radius: 50%;
+    height: 65px;
+    width: 65px;
+    /* border-radius: 50%; */
     object-fit: cover;
-    border: 2px solid var(--yellow);
+    /* border: 2px solid var(--yellow); */
 }
+
+.hero-banner img.hero-nw-text {
+    width: 650px;   
+    max-width: 90%;
+    height: auto;
+    display: block;
+    margin: 0 auto 20px; 
+}
+
 
 /* Navbar menu */
 .navbar ul {
@@ -317,32 +326,34 @@ body {
 
 .footer-container {
     display: flex;
-    justify-content: space-between;
-    flex-wrap: wrap;
+    justify-content: space-between; 
+    align-items: flex-start;
+    width: 100%;
     max-width: 1200px;
     margin: auto;
-    gap: 30px;
+    gap: 40px; 
     text-align: left;
 }
 
 .footer-col {
-    flex: 1;
-    min-width: 220px;
+    flex: 1;               
+    min-width: 250px;      
 }
 
 .footer-logo {
     width: 120px;        
     height: 120px;       
-    border-radius: 50%;  
     object-fit: cover;   
     margin-bottom: 10px;
-    border: 2px solid var(--yellow);
+    margin-left: 110px;
+    /* border: 2px solid var(--yellow); */
 }
 
 .footer-tagline {
     font-size: 18px;
     line-height: 1.6;
     font-weight: bold;
+    margin-left: 75px;
 }
 
 .footer-col h3 {

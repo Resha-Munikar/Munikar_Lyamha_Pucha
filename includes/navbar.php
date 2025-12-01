@@ -5,7 +5,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
 <nav class="navbar">
     <div class="logo">
         <a href="index.php">
-            <img src="images/logo.jpeg" alt="Munikar Lyamha Pucha Logo" class="logo-img">
+            <img src="images/logo1.jpg" alt="Munikar Lyamha Pucha Logo" class="logo-img">
         </a>
     </div>
 

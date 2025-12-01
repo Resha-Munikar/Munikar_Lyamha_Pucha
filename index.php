@@ -8,6 +8,7 @@
 <!-- HERO SECTION -->
 <section class="hero-banner">
     <div class="hero-content">
+        <img src="images/lipi.png" alt="Newari Text" class="hero-nw-text">
         <h1>Munikar Lyamha Pucha</h1>
         <p>Tied to Roots • Preserving Culture • Uniting Youths</p>
         <a href="about.php" class="hero-btn">Discover More</a>
