@@ -13,6 +13,20 @@
         </p>
     </div>
 
+    <?php if (isset($_GET['success'])): ?>
+        <p id="success-message" class="success-message" style="
+            color: #155724;
+            background: #d4edda;
+            padding: 14px;
+            text-align: center;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            font-weight: 500;
+        ">
+            ✅ Thank you! Your message has been sent successfully.
+        </p>
+    <?php endif; ?>
+
     <!-- FORM + MAP -->
     <div class="contact-layout">
 

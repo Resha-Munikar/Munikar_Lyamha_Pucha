@@ -34,3 +34,14 @@
         <p>© <?php echo date('Y'); ?> Munikar Lyamha Pucha | All Rights Reserved</p>
     </div>
 </footer>
+
+<script>
+    setTimeout(() => {
+        const msg = document.getElementById('success-message');
+        if (msg) {
+            msg.style.opacity = '0';
+            msg.style.transition = 'opacity 0.5s ease';
+            setTimeout(() => msg.remove(), 500);
+        }
+    }, 4000); // 4 seconds
+</script>
