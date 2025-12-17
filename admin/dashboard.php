@@ -13,6 +13,7 @@ $result = mysqli_query($conn, "SELECT * FROM messages ORDER BY created_at DESC")
 <!DOCTYPE html>
 <html>
 <head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <title>Admin Dashboard</title>
     <style>
         body {
@@ -88,13 +89,54 @@ $result = mysqli_query($conn, "SELECT * FROM messages ORDER BY created_at DESC")
             background: #f9f9f9;
         }
 
-        /* COLUMN WIDTH CONTROL */
-        th:nth-child(1), td:nth-child(1) { width: 16%; } /* Name */
-        th:nth-child(2), td:nth-child(2) { width: 22%; } /* Email */
-        th:nth-child(3), td:nth-child(3) { width: 12%; } /* Subject */
-        th:nth-child(4), td:nth-child(4) { width: 28%; } /* Message */
-        th:nth-child(5), td:nth-child(5) { width: 14%; } /* Date */
-        th:nth-child(6), td:nth-child(6) { width: 8%;  text-align: center; } /* Action */
+       /* COLUMN WIDTH CONTROL */
+
+        /* Checkbox */
+        th:nth-child(1),
+        td:nth-child(1) {
+            width: 50px;
+            text-align: center;
+        }
+
+        /* Name */
+        th:nth-child(2),
+        td:nth-child(2) {
+            width: 14%;
+        }
+
+        /* Email */
+        th:nth-child(3),
+        td:nth-child(3) {
+            width: 22%;
+        }
+
+        /* Subject */
+        th:nth-child(4),
+        td:nth-child(4) {
+            width: 14%;
+        }
+
+        /* Message (View button) */
+        th:nth-child(5),
+        td:nth-child(5) {
+            width: 12%;
+            text-align: center;
+        }
+
+        /* Date */
+        th:nth-child(6),
+        td:nth-child(6) {
+            width: 14%;
+            white-space: nowrap;
+        }
+
+        /* Action */
+        th:nth-child(7),
+        td:nth-child(7) {
+            width: 10%;
+            text-align: center;
+        }
+
 
         /* Message cell */
         td.message {
@@ -143,12 +185,13 @@ $result = mysqli_query($conn, "SELECT * FROM messages ORDER BY created_at DESC")
         }
 
         thead th {
-            background: #b30000;
+            background: #008736;
             color: white;
             padding: 14px;
             position: sticky;
             top: 0;
             z-index: 2; /* LOWER */
+            white-space: nowrap;
         }
 
         tbody td {
@@ -177,31 +220,231 @@ $result = mysqli_query($conn, "SELECT * FROM messages ORDER BY created_at DESC")
             background: #0056b3;
         }
 
-        /* MODAL */
+        /* MODAL BACKGROUND */
         .modal {
             display: none;
             position: fixed;
             inset: 0;
-            background: rgba(0,0,0,0.6);
-            z-index: 9999; /* 🔥 ADD THIS */
+            background: rgba(0,0,0,0.5);
+            z-index: 9999;
+            animation: fadeIn 0.3s;
         }
 
+        /* MODAL CONTENT */
         .modal-content {
-            background: white;
-            padding: 25px;
+            background: #fff;
+            border-radius: 12px;
             max-width: 600px;
-            margin: 100px auto;
-            border-radius: 10px;
-            position: relative;
+            width: 90%;
+            margin: 60px auto;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            animation: slideIn 0.3s ease;
+            display: flex;
+            flex-direction: column;
         }
 
-        .close {
-            position: absolute;
-            right: 15px;
-            top: 10px;
-            font-size: 22px;
+        /* HEADER */
+        .modal-header {
+            background: #28a745;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            font-size: 18px;
+        }
+
+        .modal-header .close {
+            font-size: 24px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .modal-header .close:hover {
+            transform: rotate(90deg);
+        }
+
+        /* BODY */
+        .modal-body {
+            padding: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .modal-body label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .modal-body input,
+        .modal-body textarea {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            font-size: 14px;
+        }
+
+        .modal-body textarea {
+            height: 120px;
+            resize: vertical;
+        }
+
+        /* FOOTER */
+        .modal-footer {
+            padding: 15px 20px;
+            text-align: right;
+            background: #f7f7f7;
+        }
+
+        .modal-footer .send-btn {
+            padding: 8px 16px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-right: 8px;
+            transition: 0.3s;
+        }
+
+        .modal-footer .send-btn:hover {
+            background: #218838;
+        }
+
+        .modal-footer .close-btn {
+            padding: 8px 16px;
+            background: #ccc;
+            color: #333;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .modal-footer .close-btn:hover {
+            background: #b3b3b3;
+        }
+
+        /* ANIMATIONS */
+        @keyframes fadeIn {
+            from {opacity: 0;}
+            to {opacity: 1;}
+        }
+
+        @keyframes slideIn {
+            from {transform: translateY(-30px); opacity: 0;}
+            to {transform: translateY(0); opacity: 1;}
+        }
+
+        tr.replied {
+            background: #f1f8f1;  
+        }
+        /* ACTION BUTTONS */
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .action-buttons a,
+        .action-buttons button {
+            white-space: nowrap;
+        }
+        .action-buttons .delete {
+            background: #dc3545;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .action-buttons .delete:hover {
+            background: #b02a37;
+        }
+        /* ICON BUTTONS */
+        .icon-btn {
+            border: none;
+            background: #f4f4f4;
+            font-size: 16px;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .icon-btn.reply {
+            color: #28a745;
+        }
+
+        .icon-btn.delete {
+            color: #dc3545;
+            background: #ffecec; /* light red bg */
+        }
+
+        .icon-btn.reply:hover {
+            background: #e6f6ea;
+        }
+
+        .icon-btn.delete:hover {
+            background: #ffd6d6;
+        }
+
+        .icon-btn.disabled {
+            color: #999;
+            background: #eee;
+            cursor: not-allowed;
+        }
+
+        /* BULK DELETE BUTTON */
+        .bulk-delete-btn {
+            background: #dc3545;
+            color: white;
+            padding: 8px 14px;
+            border: none;
+            border-radius: 6px;
+            margin-bottom: 10px;
             cursor: pointer;
         }
+
+        .bulk-delete-btn i {
+            margin-right: 5px;
+        }
+        /* CHECKBOX COLUMN */
+        .check-col {
+            text-align: center;
+        }
+
+        .check-col input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+        .message-preview {
+            display: flex;
+            align-items: center;
+            gap: 8px; 
+        }
+
+        .preview-text {
+            flex: 1; 
+            white-space: nowrap; 
+            overflow: hidden; 
+            text-overflow: ellipsis; 
+        }
+
     </style>
 </head>
 <body>
@@ -215,59 +458,130 @@ $result = mysqli_query($conn, "SELECT * FROM messages ORDER BY created_at DESC")
     <input type="text" id="searchInput" placeholder="🔍 Search messages..." class="search-box">
 
     <div class="table-wrapper">
-    <table>
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Subject</th>
-                <th>Message</th>
-                <th>Date</th>
-                <th>Action</th>
-            </tr>
-        </thead>
+        <form action="bulk-delete.php" method="POST">
+            <button class="bulk-delete-btn"
+                onclick="return confirm('Delete selected messages?')">
+                <i class="fas fa-trash"></i> Delete Selected
+            </button>
+            <table>
+                <thead>
+                <tr>
+                    <th><input type="checkbox" id="selectAll"></th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Subject</th>
+                    <th>Message</th>
+                    <th>Date</th>
+                    <th>Action</th>
+                </tr>
+                </thead>
 
-        <tbody id="messageTable">
-            <?php while ($row = mysqli_fetch_assoc($result)): ?>
-            <tr class="<?= $row['status'] === 'unread' ? 'unread' : '' ?>">
-                <td><?= htmlspecialchars($row['name']) ?></td>
-                <td><?= htmlspecialchars($row['email']) ?></td>
-                <td><?= htmlspecialchars($row['subject']) ?></td>
-                <td>
-                    <button class="view-btn"
-                        onclick="openModal(`<?= htmlspecialchars(addslashes($row['message'])) ?>`, <?= $row['id'] ?>)">
-                        View
-                    </button>
-                </td>
-                <td><?= $row['created_at'] ?></td>
-                <td>
-                    <button class="reply-btn"
-                        onclick="openReplyModal(
-                            '<?= htmlspecialchars($row['email']) ?>',
-                            '<?= htmlspecialchars($row['subject']) ?>',
-                            <?= $row['id'] ?>
-                        )">
-                        Reply
-                    </button>
+                <tbody id="messageTable">
+                    <?php while ($row = mysqli_fetch_assoc($result)): ?>
+                        <tr class="
+                            <?= $row['status'] === 'unread' ? 'unread' : '' ?>
+                            <?= $row['replied'] === 'yes' ? 'replied' : '' ?>
+                        ">
+                        <td>
+                            <input type="checkbox" name="ids[]" value="<?= $row['id'] ?>">
+                        </td>
+                        <td><?= htmlspecialchars($row['name']) ?></td>
+                        <td><?= htmlspecialchars($row['email']) ?></td>
+                        <td><?= htmlspecialchars($row['subject']) ?></td>
+                        <td>
+                            <div class="message-preview">
+                                <span class="preview-text">
+                                    <?php 
+                                        $preview = strlen($row['message']) > 50 ? substr($row['message'], 0, 50) . '...' : $row['message']; 
+                                        echo htmlspecialchars($preview);
+                                    ?>
+                                </span>
+                                <button type="button" class="view-btn"
+                                    onclick="openModal(`<?= htmlspecialchars(addslashes($row['message'])) ?>`, <?= $row['id'] ?>)">
+                                    View
+                                </button>
+                            </div>
+                        </td>
+                        <td><?= $row['created_at'] ?></td>
+                        <td>
+                            <div class="action-buttons">
 
-                    <a class="delete"
-                    href="delete-message.php?id=<?= $row['id'] ?>"
-                    onclick="return confirm('Delete this message?')">
-                    Delete
-                    </a>
-                </td>
-            </tr>
-            <?php endwhile; ?>
-        </tbody>
-    </table>
+                                <!-- REPLY -->
+                                <?php if ($row['replied'] === 'no'): ?>
+                                    <button type="button" class="icon-btn reply"
+                                        onclick="openReplyModal(
+                                            '<?= htmlspecialchars($row['email']) ?>',
+                                            '<?= htmlspecialchars($row['subject']) ?>',
+                                            <?= $row['id'] ?>
+                                        )">
+                                        <i class="fas fa-reply"></i>
+                                    </button>
+                                <?php else: ?>
+                                    <button class="icon-btn reply disabled" title="Already replied" disabled>
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                <?php endif; ?>
+
+                                <!-- DELETE -->
+                                <a class="icon-btn delete"
+                                href="delete-message.php?id=<?= $row['id'] ?>"
+                                title="Delete"
+                                onclick="return confirm('Delete this message?')">
+                                <i class="fas fa-trash"></i>
+                                </a>
+
+                            </div>
+                        </td>
+                        
+                    </tr>
+                    <?php endwhile; ?>
+                </tbody>
+            </table>
+        </form>
     </div>
 
 </div>
 <div id="messageModal" class="modal">
     <div class="modal-content">
-        <span class="close" onclick="closeModal()">&times;</span>
-        <h3>Message</h3>
-        <p id="modalText"></p>
+        <div class="modal-header">
+            <h3>📩 Message</h3>
+            <span class="close" onclick="closeModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <p id="modalText"></p>
+        </div>
+        <div class="modal-footer">
+            <button class="close-btn" onclick="closeModal()">Close</button>
+        </div>
+    </div>
+</div>
+
+<div id="replyModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>✉️ Reply to Message</h3>
+            <span class="close" onclick="closeReplyModal()">&times;</span>
+        </div>
+
+        <div class="modal-body">
+            <form action="send-reply.php" method="POST">
+                <input type="hidden" name="message_id" id="replyMessageId">
+
+                <label for="replyEmail">Email</label>
+                <input type="email" name="to_email" id="replyEmail" readonly>
+
+                <label for="replySubject">Subject</label>
+                <input type="text" name="subject" id="replySubject" required>
+
+                <label for="reply_message">Reply</label>
+                <textarea name="reply_message" id="reply_message" required></textarea>
+            </form>
+        </div>
+
+        <div class="modal-footer">
+            <button class="send-btn" type="submit" form="replyForm">Send Reply</button>
+            <button class="close-btn" onclick="closeReplyModal()">Cancel</button>
+        </div>
     </div>
 </div>
 
@@ -295,6 +609,26 @@ document.getElementById('searchInput').addEventListener('keyup', function() {
             : 'none';
     });
 });
+function openReplyModal(email, subject, id) {
+    document.getElementById('replyEmail').value = email;
+    document.getElementById('replySubject').value = 'Re: ' + subject;
+    document.getElementById('replyMessageId').value = id;
+    document.getElementById('replyModal').style.display = 'block';
+}
+
+function closeReplyModal() {
+    document.getElementById('replyModal').style.display = 'none';
+}
+document.getElementById('selectAll').addEventListener('change', function () {
+    document.querySelectorAll('input[name="ids[]"]').forEach(cb => {
+        cb.checked = this.checked;
+    });
+});
+function confirmDelete(id) {
+    if (confirm('Delete this message?')) {
+        window.location.href = 'delete-message.php?id=' + id;
+    }
+}
 </script>
 
 </body>
