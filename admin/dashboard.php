@@ -8,6 +8,10 @@ if (!isset($_SESSION['admin'])) {
 }
 
 $result = mysqli_query($conn, "SELECT * FROM messages ORDER BY created_at DESC");
+// Count unread messages
+$unreadResult = mysqli_query($conn, "SELECT COUNT(*) AS unread_count FROM messages WHERE status='unread'");
+$unreadRow = mysqli_fetch_assoc($unreadResult);
+$unreadCount = $unreadRow['unread_count'];
 ?>
 
 <!DOCTYPE html>
@@ -208,16 +212,24 @@ $result = mysqli_query($conn, "SELECT * FROM messages ORDER BY created_at DESC")
 
         /* BUTTONS */
         .view-btn {
-            background: #007bff;
+            background: #28a745;
             color: white;
             border: none;
-            padding: 6px 12px;
-            border-radius: 5px;
+            padding: 8px 16px;
+            border-radius: 6px;
             cursor: pointer;
+            font-weight: 600;
+            transition: 0.3s;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
         }
 
         .view-btn:hover {
-            background: #0056b3;
+            background: #218838;
+        }
+
+        .view-btn.active {
+            background: #ffc107; /* toggle color when active */
+            color: #333;
         }
 
         /* MODAL BACKGROUND */
@@ -285,12 +297,14 @@ $result = mysqli_query($conn, "SELECT * FROM messages ORDER BY created_at DESC")
 
         .modal-body input,
         .modal-body textarea {
-            width: 100%;
+            width: 95%;           /* slightly smaller than full width */
+            max-width: 590px;     /* optional: limit maximum width */
             padding: 10px;
             margin-bottom: 15px;
             border-radius: 6px;
             border: 1px solid #ccc;
             font-size: 14px;
+            display: block;       /* ensures proper spacing */
         }
 
         .modal-body textarea {
@@ -453,16 +467,38 @@ $result = mysqli_query($conn, "SELECT * FROM messages ORDER BY created_at DESC")
     <div class="header">
         <h2>📩 Contact Messages</h2>
         <a class="logout" href="logout.php">Logout</a>
+
     </div>
 
     <input type="text" id="searchInput" placeholder="🔍 Search messages..." class="search-box">
 
     <div class="table-wrapper">
         <form action="bulk-delete.php" method="POST">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px;">
             <button class="bulk-delete-btn"
                 onclick="return confirm('Delete selected messages?')">
                 <i class="fas fa-trash"></i> Delete Selected
             </button>
+
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span id="unreadBadge" style="
+                    background: #dc3545;
+                    color: white;
+                    padding: 6px 12px;
+                    border-radius: 20px;
+                    font-size: 14px;
+                    font-weight: 600;
+                ">
+                    <i class="fas fa-envelope"></i> <?= $unreadCount ?> Unread
+                </span>
+
+                <!-- Filter unread button -->
+                <button id="filterUnreadBtn" type="button" class="view-btn" style="background:#28a745; color:white;">
+                    Show Unread
+                </button>
+            </div>
+        </div>
+
             <table>
                 <thead>
                 <tr>
@@ -564,7 +600,7 @@ $result = mysqli_query($conn, "SELECT * FROM messages ORDER BY created_at DESC")
         </div>
 
         <div class="modal-body">
-            <form action="send-reply.php" method="POST">
+            <form id="replyForm" action="send-reply.php" method="POST">
                 <input type="hidden" name="message_id" id="replyMessageId">
 
                 <label for="replyEmail">Email</label>
@@ -582,6 +618,7 @@ $result = mysqli_query($conn, "SELECT * FROM messages ORDER BY created_at DESC")
             <button class="send-btn" type="submit" form="replyForm">Send Reply</button>
             <button class="close-btn" onclick="closeReplyModal()">Cancel</button>
         </div>
+
     </div>
 </div>
 
@@ -590,25 +627,24 @@ function openModal(message, id) {
     document.getElementById('modalText').innerText = message;
     document.getElementById('messageModal').style.display = 'block';
 
-    // Mark as read
-    fetch('mark-read.php?id=' + id);
+    // Mark as read via AJAX
+    fetch('mark-read.php?id=' + id)
+        .then(response => response.text())
+        .then(data => {
+            // Update the unread count badge
+            let badge = document.getElementById('unreadBadge');
+            let count = parseInt(badge.innerText);
+            if (count > 0) {
+                badge.innerText = (count - 1) + " Unread";
+            }
+        });
 }
 
 function closeModal() {
     document.getElementById('messageModal').style.display = 'none';
 }
 
-/* SEARCH */
-document.getElementById('searchInput').addEventListener('keyup', function() {
-    let value = this.value.toLowerCase();
-    let rows = document.querySelectorAll('#messageTable tr');
 
-    rows.forEach(row => {
-        row.style.display = row.innerText.toLowerCase().includes(value)
-            ? ''
-            : 'none';
-    });
-});
 function openReplyModal(email, subject, id) {
     document.getElementById('replyEmail').value = email;
     document.getElementById('replySubject').value = 'Re: ' + subject;
@@ -629,6 +665,42 @@ function confirmDelete(id) {
         window.location.href = 'delete-message.php?id=' + id;
     }
 }
+const filterBtn = document.getElementById('filterUnreadBtn');
+let showingUnreadOnly = false;
+
+filterBtn.addEventListener('click', function() {
+    const rows = document.querySelectorAll('#messageTable tr');
+    showingUnreadOnly = !showingUnreadOnly;
+
+    if (showingUnreadOnly) {
+        filterBtn.innerText = "Show All";
+        filterBtn.classList.add('active');
+        rows.forEach(row => {
+            row.style.display = row.classList.contains('unread') ? '' : 'none';
+        });
+    } else {
+        filterBtn.innerText = "Show Unread";
+        filterBtn.classList.remove('active');
+        rows.forEach(row => {
+            row.style.display = '';
+        });
+    }
+});
+
+// SEARCH FUNCTIONALITY
+document.getElementById('searchInput').addEventListener('keyup', function() {
+    const value = this.value.toLowerCase();
+    const rows = document.querySelectorAll('#messageTable tr');
+
+    rows.forEach(row => {
+        const matchesSearch = row.innerText.toLowerCase().includes(value);
+        const isUnreadHidden = showingUnreadOnly && !row.classList.contains('unread');
+
+        row.style.display = matchesSearch && !isUnreadHidden ? '' : 'none';
+    });
+});
+
+
 </script>
 
 </body>

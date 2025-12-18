@@ -1,6 +1,14 @@
 <?php
 include '../includes/db.php';
 
+// Include PHPMailer manually
+require '../phpmailer/src/PHPMailer.php';
+require '../phpmailer/src/SMTP.php';
+require '../phpmailer/src/Exception.php';
+
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $to = $_POST['to_email'];
@@ -8,14 +16,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $message = $_POST['reply_message'];
     $id = (int)$_POST['message_id'];
 
-    $headers = "From: Munikar Lyamha Pucha <munikarlyamhapucha@gmail.com>\r\n";
-    $headers .= "Reply-To: munikarlyamhapucha@gmail.com\r\n";
-    $headers .= "Content-Type: text/plain; charset=UTF-8";
+    $mail = new PHPMailer(true);
 
-    if (mail($to, $subject, $message, $headers)) {
+    try {
+        // Server settings
+        $mail->isSMTP();
+        $mail->Host = 'smtp.gmail.com';
+        $mail->SMTPAuth = true;
+        $mail->Username = 'munikarlyamhapucha@gmail.com'; // your Gmail
+        $mail->Password = 'YOUR_APP_PASSWORD';           // Gmail App Password
+        $mail->SMTPSecure = 'tls';
+        $mail->Port = 587;
+
+        // Recipients
+        $mail->setFrom('munikarlyamhapucha@gmail.com', 'Munikar Lyamha Pucha');
+        $mail->addAddress($to);
+
+        // Content
+        $mail->isHTML(false);
+        $mail->Subject = $subject;
+        $mail->Body    = $message;
+
+        // Send email
+        $mail->send();
+
+        // Update message as replied
         mysqli_query($conn, "UPDATE messages SET replied='yes' WHERE id=$id");
+
         header("Location: dashboard.php?replied=1");
-    } else {
+        exit;
+
+    } catch (Exception $e) {
+        // If email fails
         header("Location: dashboard.php?error=1");
+        exit;
     }
 }
+?>
