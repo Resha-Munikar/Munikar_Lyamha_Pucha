@@ -125,7 +125,7 @@ $totalPages = ceil($totalAlbums / $albumsPerPage);
         .container { max-width:1200px; margin:40px auto; background:white; padding:25px; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,0.08);}
 
         /* Upload button */
-        #uploadBtn { padding:10px 20px; background:#008736; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:600; margin-bottom:20px;}
+        #uploadBtn { padding:10px 20px; background:#C00000; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:600; margin-bottom:20px;}
         #uploadBtn:hover { background:#006626; }
 
         h2 { color:#C00000; margin-bottom:20px; }
@@ -310,6 +310,9 @@ $totalPages = ceil($totalAlbums / $albumsPerPage);
 </div>
 
 <script>
+    const IMAGES_PER_PAGE = 12;
+    let overlayPage = 1;
+
     // Auto hide toast
     setTimeout(() => {
         document.querySelectorAll('.toast').forEach(t => t.remove());
@@ -336,48 +339,24 @@ $totalPages = ceil($totalAlbums / $albumsPerPage);
 
     let currentImages = [];
     let currentIndex = 0;
+    let activeEvent = '';
 
     // Folder Overlay
     document.querySelectorAll('.folder').forEach(folder => {
         folder.addEventListener('click', () => {
-            const event = folder.getAttribute('data-event');
-            currentImages = imagesGrouped[event] || [];
-            overlayImages.innerHTML = '';
+            activeEvent = folder.getAttribute('data-event');
+            currentImages = imagesGrouped[activeEvent] || [];
+            overlayPage = 1;
 
-            currentImages.forEach((img, index) => {
-                const container = document.createElement('div');
-                container.className = 'image-container';
-
-                const imgEl = document.createElement('img');
-                imgEl.src = `../uploads/gallery/${event}/${img.filename}`;
-                imgEl.alt = img.title;
-
-                imgEl.onclick = () => {
-                    currentIndex = index;
-                    lightboxImg.src = imgEl.src;
-                    lightbox.style.display = 'flex';
-                }
-
-                const delBtn = document.createElement('button');
-                delBtn.className = 'delete-btn';
-                delBtn.innerText = '✖';
-                delBtn.onclick = function(e){
-                    e.stopPropagation();
-                    if(confirm('Delete this image?')){
-                        window.location.href = `?delete=${img.id}`;
-                    }
-                };
-
-                container.appendChild(imgEl);
-                container.appendChild(delBtn);
-                overlayImages.appendChild(container);
-            });
-
+            renderOverlayImages(activeEvent);
             folderOverlay.style.display = 'flex';
         });
     });
 
-    closeOverlay.onclick = () => folderOverlay.style.display = 'none';
+    closeOverlay.onclick = () => {
+        folderOverlay.style.display = 'none';
+        overlayPage = 1;
+    };
     window.onclick = (e) => { if(e.target==folderOverlay) folderOverlay.style.display='none'; };
 
     // Lightbox
@@ -412,6 +391,89 @@ $totalPages = ceil($totalAlbums / $albumsPerPage);
         };
 
     });
+    function renderOverlayImages(event) {
+    overlayImages.innerHTML = '';
+
+    const start = (overlayPage - 1) * IMAGES_PER_PAGE;
+    const end = start + IMAGES_PER_PAGE;
+    const pageImages = currentImages.slice(start, end);
+
+    pageImages.forEach((img, index) => {
+        const realIndex = start + index;
+
+        const container = document.createElement('div');
+        container.className = 'image-container';
+
+        const imgEl = document.createElement('img');
+        imgEl.src = `../uploads/gallery/${event}/${img.filename}`;
+        imgEl.alt = img.title;
+
+        imgEl.onclick = () => {
+            currentIndex = realIndex;
+            lightboxImg.src = imgEl.src;
+            lightbox.style.display = 'flex';
+        };
+
+        const delBtn = document.createElement('button');
+        delBtn.className = 'delete-btn';
+        delBtn.innerText = '✖';
+        delBtn.onclick = function (e) {
+            e.stopPropagation();
+            if (confirm('Delete this image?')) {
+                window.location.href = `?delete=${img.id}`;
+            }
+        };
+
+        container.appendChild(imgEl);
+        container.appendChild(delBtn);
+        overlayImages.appendChild(container);
+    });
+
+    renderOverlayPagination();
+}
+function renderOverlayPagination() {
+    const totalPages = Math.ceil(currentImages.length / IMAGES_PER_PAGE);
+
+    if (totalPages <= 1) return;
+
+    const nav = document.createElement('div');
+    nav.style.cssText = `
+        grid-column: 1 / -1;
+        display: flex;
+        justify-content: center;
+        gap: 12px;
+        margin-top: 20px;
+    `;
+
+    if (overlayPage > 1) {
+        const prev = document.createElement('button');
+        prev.innerText = '⬅ Prev';
+        prev.onclick = () => {
+            overlayPage--;
+            renderOverlayImages(activeEvent);
+        };
+        nav.appendChild(prev);
+    }
+
+    const pageInfo = document.createElement('span');
+    pageInfo.style.color = '#fff';
+    pageInfo.style.fontWeight = '600';
+    pageInfo.innerText = `Page ${overlayPage} / ${totalPages}`;
+    nav.appendChild(pageInfo);
+
+    if (overlayPage < totalPages) {
+        const next = document.createElement('button');
+        next.innerText = 'Next ➡';
+        next.onclick = () => {
+            overlayPage++;
+            renderOverlayImages(activeEvent);
+        };
+        nav.appendChild(next);
+    }
+
+    overlayImages.appendChild(nav);
+}
+
 
 </script>
 </body>
