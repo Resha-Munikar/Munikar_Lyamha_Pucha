@@ -1,6 +1,6 @@
 <?php
-session_start();
 include '../includes/db.php';
+include 'navbar.php';
 
 if (!isset($_SESSION['admin'])) {
     header("Location: login.php");
@@ -73,7 +73,7 @@ $unreadCount = $unreadRow['unread_count'];
         }
 
         thead th {
-            background: #b30000;
+            background: #008736;
             color: #ffffff;
             padding: 14px 12px;
             font-size: 14px;
@@ -491,8 +491,6 @@ $unreadCount = $unreadRow['unread_count'];
 <div class="container">
     <div class="header">
         <h2>📩 Contact Messages</h2>
-        <a class="logout" href="logout.php">Logout</a>
-
     </div>
 
     <input type="text" id="searchInput" placeholder="🔍 Search messages..." class="search-box">
