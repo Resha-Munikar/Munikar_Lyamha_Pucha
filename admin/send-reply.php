@@ -23,13 +23,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $mail->isSMTP();
         $mail->Host = 'smtp.gmail.com';
         $mail->SMTPAuth = true;
-        $mail->Username = 'munikarlyamhapucha@gmail.com'; // your Gmail
-        $mail->Password = 'YOUR_APP_PASSWORD';           // Gmail App Password
+        $mail->Username = 'info.munikarlyamhapucha@gmail.com'; 
+        $mail->Password = 'nwwa mjfk lfos mcaf';           
         $mail->SMTPSecure = 'tls';
         $mail->Port = 587;
 
         // Recipients
-        $mail->setFrom('munikarlyamhapucha@gmail.com', 'Munikar Lyamha Pucha');
+        $mail->setFrom('info.munikarlyamhapucha@gmail.com', 'Munikar Lyamha Pucha');
         $mail->addAddress($to);
 
         // Content

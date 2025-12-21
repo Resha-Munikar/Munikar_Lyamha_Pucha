@@ -182,28 +182,6 @@ $unreadCount = $unreadRow['unread_count'];
             overflow-y: auto;
         }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            table-layout: fixed;
-        }
-
-        thead th {
-            background: #008736;
-            color: white;
-            padding: 14px;
-            position: sticky;
-            top: 0;
-            z-index: 2; /* LOWER */
-            white-space: nowrap;
-        }
-
-        tbody td {
-            padding: 12px;
-            border-bottom: 1px solid #eee;
-            word-wrap: break-word;
-        }
-
         /* UNREAD */
         tr.unread {
             background: #fff4f4;
@@ -458,10 +436,57 @@ $unreadCount = $unreadRow['unread_count'];
             overflow: hidden; 
             text-overflow: ellipsis; 
         }
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 650px;
+            padding: 14px 20px;
+            border-radius: 8px;
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 10000;
+            animation: slideInRight 0.4s ease;
+        }
+
+        .toast.success {
+            background: #28a745;
+        }
+
+        .toast.error {
+            background: #dc3545;
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
 
     </style>
 </head>
 <body>
+<?php if (isset($_GET['replied'])): ?>
+    <div class="toast success">
+        <i class="fas fa-check-circle"></i>
+        Reply sent successfully!
+    </div>
+<?php endif; ?>
+
+<?php if (isset($_GET['error'])): ?>
+    <div class="toast error">
+        <i class="fas fa-times-circle"></i>
+        Failed to send reply. Try again.
+    </div>
+<?php endif; ?>
 
 <div class="container">
     <div class="header">
@@ -699,8 +724,9 @@ document.getElementById('searchInput').addEventListener('keyup', function() {
         row.style.display = matchesSearch && !isUnreadHidden ? '' : 'none';
     });
 });
-
-
+setTimeout(() => {
+    document.querySelectorAll('.toast').forEach(t => t.remove());
+}, 3500);
 </script>
 
 </body>
