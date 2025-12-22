@@ -57,6 +57,26 @@ if (isset($_GET['delete'])) {
     }
 }
 
+// Bulk delete images
+if (isset($_GET['bulk_delete'])) {
+    $ids = explode(',', $_GET['bulk_delete']);
+
+    foreach ($ids as $id) {
+        $id = intval($id);
+        $res = mysqli_query($conn, "SELECT filename, event_name FROM gallery WHERE id=$id");
+        if ($row = mysqli_fetch_assoc($res)) {
+            $path = '../uploads/gallery/' .
+                preg_replace('/[^a-zA-Z0-9_-]/', '_', $row['event_name']) .
+                '/' . $row['filename'];
+
+            if (file_exists($path)) unlink($path);
+            mysqli_query($conn, "DELETE FROM gallery WHERE id=$id");
+        }
+    }
+
+    $success = count($ids) . " image(s) deleted successfully!";
+}
+
 // Delete album
 if (isset($_GET['delete_album'])) {
     $event = $_GET['delete_album'];
@@ -147,8 +167,8 @@ $totalPages = ceil($totalAlbums / $albumsPerPage);
         .folder-overlay { position: fixed; top:0; left:0; width:99%; height:90%; background: rgba(0,0,0,0.6); backdrop-filter: blur(6px); display: none; justify-content: center; align-items: center; z-index: 2000; overflow: auto; padding: 40px 20px; }
         .folder-overlay .overlay-content { display: grid; grid-template-columns: repeat(auto-fill,minmax(180px,1fr)); gap: 20px; max-width: 1200px; width: 100%; }
         .folder-overlay .image-container { position: relative; }
-        .folder-overlay img { width:100%; border-radius:8px; cursor:pointer; transition: transform 0.3s; }
-        .folder-overlay img:hover { transform: scale(1.05); }
+        .folder-overlay img { width:100%; border-radius:8px; cursor:pointer; transition: none; }
+        .folder-overlay img:hover { transform: none; }
         .folder-overlay .delete-btn { position:absolute; top:5px; right:5px; background:red; color:white; border:none; border-radius:4px; padding:2px 6px; cursor:pointer; font-size:12px; }
         .folder-overlay .close-overlay { position:absolute; top:20px; right:30px; font-size:36px; color:white; cursor:pointer; font-weight:bold; }
 
@@ -197,6 +217,42 @@ $totalPages = ceil($totalAlbums / $albumsPerPage);
 
         .rename-btn:hover { background: #ffd966; }
         .delete-btn:hover { background: #ff4d4d; color: white; }
+        .image-checkbox {
+                position: absolute;
+                top: 8px;
+                left: 8px;
+                z-index: 10;
+                width: 18px;
+                height: 18px;
+                cursor: pointer;
+        }
+
+        .bulk-actions {
+            grid-column: 1 / -1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .bulk-actions label {
+            color: white;
+            font-weight: 600;
+        }
+
+        .bulk-actions button {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .bulk-actions button:hover {
+            background: #b52a37;
+        }
 
     </style>
 </head>
@@ -212,7 +268,9 @@ $totalPages = ceil($totalAlbums / $albumsPerPage);
 <div class="container">
 
     <!-- Upload button -->
-    <button id="uploadBtn">📤 Upload Images</button>
+    <button id="uploadBtn">
+        <span style="font-size:18px; font-weight:700;"> + </span> Upload Images
+    </button>
 
     <h2>📂 Albums</h2>
     <div class="folders">
@@ -394,6 +452,19 @@ $totalPages = ceil($totalAlbums / $albumsPerPage);
     function renderOverlayImages(event) {
     overlayImages.innerHTML = '';
 
+    // 🔹 Bulk action bar
+    const bulkBar = document.createElement('div');
+    bulkBar.className = 'bulk-actions';
+
+    bulkBar.innerHTML = `
+        <label>
+            <input type="checkbox" id="selectAll"> Select All
+        </label>
+        <button id="deleteSelected">🗑 Delete Selected</button>
+    `;
+
+    overlayImages.appendChild(bulkBar);
+
     const start = (overlayPage - 1) * IMAGES_PER_PAGE;
     const end = start + IMAGES_PER_PAGE;
     const pageImages = currentImages.slice(start, end);
@@ -403,6 +474,11 @@ $totalPages = ceil($totalAlbums / $albumsPerPage);
 
         const container = document.createElement('div');
         container.className = 'image-container';
+
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.className = 'image-checkbox';
+            checkbox.value = img.id;
 
         const imgEl = document.createElement('img');
         imgEl.src = `../uploads/gallery/${event}/${img.filename}`;
@@ -414,23 +490,37 @@ $totalPages = ceil($totalAlbums / $albumsPerPage);
             lightbox.style.display = 'flex';
         };
 
-        const delBtn = document.createElement('button');
-        delBtn.className = 'delete-btn';
-        delBtn.innerText = '✖';
-        delBtn.onclick = function (e) {
-            e.stopPropagation();
-            if (confirm('Delete this image?')) {
-                window.location.href = `?delete=${img.id}`;
-            }
-        };
-
+        container.appendChild(checkbox);
         container.appendChild(imgEl);
-        container.appendChild(delBtn);
         overlayImages.appendChild(container);
     });
 
+    // Select all logic
+    document.getElementById('selectAll').onclick = function () {
+        document.querySelectorAll('.image-checkbox').forEach(cb => {
+            cb.checked = this.checked;
+        });
+    };
+
+    // Bulk delete
+    document.getElementById('deleteSelected').onclick = function () {
+        const selected = [...document.querySelectorAll('.image-checkbox:checked')]
+            .map(cb => cb.value);
+
+        if (selected.length === 0) {
+            alert('No images selected');
+            return;
+        }
+
+        if (!confirm(`Delete ${selected.length} selected image(s)?`)) return;
+
+        // Redirect with IDs
+        window.location.href = `?bulk_delete=${selected.join(',')}`;
+    };
+
     renderOverlayPagination();
 }
+
 function renderOverlayPagination() {
     const totalPages = Math.ceil(currentImages.length / IMAGES_PER_PAGE);
 
