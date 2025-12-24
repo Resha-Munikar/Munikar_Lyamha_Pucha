@@ -83,7 +83,6 @@ if (isset($_GET['delete_album'])) {
     $safe_event = preg_replace('/[^a-zA-Z0-9_-]/', '_', $event);
     $folder = "../uploads/gallery/$safe_event";
 
-    // Delete images
     if (is_dir($folder)) {
         foreach (glob("$folder/*") as $file) {
             unlink($file);
@@ -118,7 +117,7 @@ $albumsPerPage = 6;
 $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
 $offset = ($page - 1) * $albumsPerPage;
 
-// Fetch albums
+// Fetch albums with LIMIT for pagination
 $eventsResult = mysqli_query(
     $conn,
     "SELECT event_name, filename 
@@ -144,35 +143,31 @@ $totalPages = ceil($totalAlbums / $albumsPerPage);
         body { font-family:'Segoe UI', sans-serif; background:#f3f3f3; margin:0; padding:0; }
         .container { max-width:1200px; margin:40px auto; background:white; padding:25px; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,0.08);}
 
-        /* Upload button */
         #uploadBtn { padding:10px 20px; background:#C00000; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:600; margin-bottom:20px;}
         #uploadBtn:hover { background:#006626; }
 
         h2 { color:#C00000; margin-bottom:20px; }
 
-        /* Toast Notifications */
         .toast { position: fixed; top: 100px; left: 50%; transform: translateX(-50%); padding: 14px 20px; border-radius: 8px; color: white; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 10px; z-index: 10000; animation: slideIn 0.4s ease;}
         .toast.success { background: #28a745; }
         .toast.error { background: #dc3545; }
         @keyframes slideIn { from { opacity: 0; transform: translate(-50%, -20px); } to { opacity: 1; transform: translate(-50%, 0); } }
 
-        /* Folder view */
         .folders { display:flex; flex-wrap:wrap; gap:20px; }
         .folder { display:flex; flex-direction:column; align-items:center; cursor:pointer; width:180px; }
         .folder img { width:150px; height:150px; object-fit:cover; border-radius:8px; box-shadow:0 4px 10px rgba(0,0,0,0.2); transition: transform 0.3s; }
         .folder img:hover { transform: scale(1.05); }
         .folder-name { margin-top:8px; font-weight:600; text-align:center; word-wrap:break-word; }
 
-        /* Overlay for folder images */
-        .folder-overlay {position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; z-index: 2000; overflow: auto; padding: 40px; }
+        .folder-overlay {position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; z-index: 2000; overflow: auto; padding: 40px; flex-direction: column;}
         .folder-overlay .overlay-content { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 20px; max-width: 1200px; width: 100%; }
         .folder-overlay .image-container { position: relative; }
         .folder-overlay img { width:100%; border-radius:8px; cursor:pointer; transition: none; }
-        .folder-overlay img:hover { transform: none; }
         .folder-overlay .delete-btn { position:absolute; top:5px; right:5px; background:red; color:white; border:none; border-radius:4px; padding:2px 6px; cursor:pointer; font-size:12px; }
         .folder-overlay .close-overlay { position:absolute; top:20px; right:30px; font-size:36px; color:white; cursor:pointer; font-weight:bold; }
 
-        /* Lightbox */
+        .overlay-counter { color:white; font-weight:600; margin-top:10px; }
+
         .lightbox { display:none; position:fixed; z-index:3000; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.9); justify-content:center; align-items:center; }
         .lightbox img { max-width:90%; max-height:90%; border-radius:6px; }
         .close-lightbox { position:absolute; top:20px; right:30px; font-size:36px; color:white; cursor:pointer; }
@@ -180,128 +175,71 @@ $totalPages = ceil($totalAlbums / $albumsPerPage);
         .prev { left:30px; } .next { right:30px; }
         .prev:hover, .next:hover { color:#ffcc00; }
 
-        /* Upload Modal */
         .upload-modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(6px); justify-content:center; align-items:center; z-index:4000; padding:20px; }
-        .upload-modal .modal-content {
-            background: white;
-            padding: 24px 28px;      /* better inner spacing */
-            border-radius: 12px;
-            max-width: 480px;        /* smaller modal width */
-            width: 100%;
-            position: relative;
-            box-shadow: 0 12px 35px rgba(0,0,0,0.25);
-        }
+        .upload-modal .modal-content { background: white; padding: 24px 28px; border-radius: 12px; max-width: 480px; width: 100%; position: relative; box-shadow: 0 12px 35px rgba(0,0,0,0.25); }
         .upload-modal .close-upload { position:absolute; top:15px; right:20px; font-size:30px; cursor:pointer; font-weight:bold; color:#333; }
         .upload-modal input[type="text"], .upload-modal input[type="file"] { width:100%; padding:10px; margin-bottom:15px; border-radius:6px; border:1px solid #ccc; }
-        .upload-modal label {
-            font-weight: 600;
-            margin-bottom: 6px;
-            display: block;
-        }
-
-        .upload-modal input[type="text"],
-        .upload-modal input[type="file"] {
-            margin-bottom: 12px;
-        }
-
+        .upload-modal label { font-weight: 600; margin-bottom: 6px; display: block; }
         .upload-modal button { padding:10px 20px; background:#008736; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:600; }
         .upload-modal button:hover { background:#006626; }
-        .rename-btn, .delete-btn {
-            background: #eaeaea;
-            border: none;
-            padding: 5px 8px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 13px;
-        }
-
+        .rename-btn, .delete-btn { background: #eaeaea; border: none; padding: 5px 8px; border-radius: 5px; cursor: pointer; font-size: 13px; }
         .rename-btn:hover { background: #ffd966; }
         .delete-btn:hover { background: #ff4d4d; color: white; }
-        .image-checkbox {
-                position: absolute;
-                top: 8px;
-                left: 8px;
-                z-index: 10;
-                width: 18px;
-                height: 18px;
-                cursor: pointer;
-        }
+        .image-checkbox { position: absolute; top: 8px; left: 8px; z-index: 10; width: 18px; height: 18px; cursor: pointer; }
 
-        .bulk-actions {
-            grid-column: 1 / -1;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-
-        .bulk-actions label {
-            color: white;
-            font-weight: 600;
-        }
-
-        .bulk-actions button {
-            background: #dc3545;
-            color: white;
-            border: none;
-            padding: 6px 14px;
-            border-radius: 6px;
-            font-weight: 600;
-            cursor: pointer;
-        }
-
-        .bulk-actions button:hover {
-            background: #b52a37;
-        }
+        .bulk-actions { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .bulk-actions label { color: white; font-weight: 600; }
+        .bulk-actions button { background: #dc3545; color: white; border: none; padding: 6px 14px; border-radius: 6px; font-weight: 600; cursor: pointer; }
+        .bulk-actions button:hover { background: #b52a37; }
 
     </style>
 </head>
 <body>
-    <?php if ($success): ?>
-    <div class="toast success">✅ <?= htmlspecialchars($success) ?></div>
+<?php if ($success): ?>
+<div class="toast success">✅ <?= htmlspecialchars($success) ?></div>
 <?php endif; ?>
-
 <?php if ($error): ?>
-    <div class="toast error">❌ <?= htmlspecialchars($error) ?></div>
+<div class="toast error">❌ <?= htmlspecialchars($error) ?></div>
 <?php endif; ?>
 
 <div class="container">
 
-    <!-- Upload button -->
-    <button id="uploadBtn">
-        <span style="font-size:18px; font-weight:700;"> + </span> Upload Images
-    </button>
+    <button id="uploadBtn"><span style="font-size:18px; font-weight:700;"> + </span> Upload Images</button>
 
     <h2>📂 Albums</h2>
     <div class="folders">
-        <?php
-        $eventsResult = mysqli_query($conn, "SELECT event_name, filename FROM gallery GROUP BY event_name ORDER BY event_name ASC");
-        while($event = mysqli_fetch_assoc($eventsResult)):
+        <?php while($event = mysqli_fetch_assoc($eventsResult)):
             $event_folder = preg_replace('/[^a-zA-Z0-9_-]/', '_', $event['event_name']);
             $folder_thumb = $event['filename'] ? "../uploads/gallery/$event_folder/" . $event['filename'] : "../images/folder.png";
         ?>
-            <div class="folder" data-event="<?= $event_folder ?>" data-name="<?= htmlspecialchars($event['event_name']) ?>">
-                <img src="<?= $folder_thumb ?>" alt="folder icon">
-
-                <div class="folder-name"><?= htmlspecialchars($event['event_name']) ?></div>
-
-                <div style="margin-top:6px; display:flex; gap:6px;">
-                    <button class="rename-btn">✏️</button>
-                    <button class="delete-btn">🗑️</button>
-                </div>
+        <div class="folder" data-event="<?= $event_folder ?>" data-name="<?= htmlspecialchars($event['event_name']) ?>">
+            <img src="<?= $folder_thumb ?>" alt="folder icon">
+            <div class="folder-name"><?= htmlspecialchars($event['event_name']) ?></div>
+            <div style="margin-top:6px; display:flex; gap:6px;">
+                <button class="rename-btn">✏️</button>
+                <button class="delete-btn">🗑️</button>
             </div>
-
+        </div>
         <?php endwhile; ?>
     </div>
 
-    <?php
-    $imagesGrouped = [];
-    $allImages = mysqli_query($conn, "SELECT * FROM gallery ORDER BY id DESC");
-    while($img = mysqli_fetch_assoc($allImages)){
-        $event_folder = preg_replace('/[^a-zA-Z0-9_-]/', '_', $img['event_name']);
-        $imagesGrouped[$event_folder][] = $img;
-    }
-    ?>
+    <!-- Pagination -->
+    <div style="margin-top:30px; text-align:center;">
+        <?php if ($page > 1): ?>
+            <a href="?page=<?= $page-1 ?>" style="margin:0 8px; text-decoration:none; font-weight:600;">⬅ Prev</a>
+        <?php endif; ?>
+        <?php for ($i=1; $i<=$totalPages; $i++): ?>
+            <a href="?page=<?= $i ?>"
+               style="margin:0 6px; padding:6px 10px; border-radius:6px;
+               <?= $i==$page ? 'background:#008736;color:white;' : 'background:#eaeaea;color:#333;' ?>
+               text-decoration:none; font-weight:600;">
+                <?= $i ?>
+            </a>
+        <?php endfor; ?>
+        <?php if ($page < $totalPages): ?>
+            <a href="?page=<?= $page+1 ?>" style="margin:0 8px; text-decoration:none; font-weight:600;">Next ➡</a>
+        <?php endif; ?>
+    </div>
 
 </div>
 
@@ -325,26 +263,7 @@ $totalPages = ceil($totalAlbums / $albumsPerPage);
 <div class="folder-overlay" id="folderOverlay">
     <span class="close-overlay">&times;</span>
     <div class="overlay-content" id="overlayImages"></div>
-</div>
-
-<!-- Pagination -->
-<div style="margin-top:30px; text-align:center;">
-    <?php if ($page > 1): ?>
-        <a href="?page=<?= $page-1 ?>" style="margin:0 8px; text-decoration:none; font-weight:600;">⬅ Prev</a>
-    <?php endif; ?>
-
-    <?php for ($i=1; $i<=$totalPages; $i++): ?>
-        <a href="?page=<?= $i ?>"
-           style="margin:0 6px; padding:6px 10px; border-radius:6px;
-           <?= $i==$page ? 'background:#008736;color:white;' : 'background:#eaeaea;color:#333;' ?>
-           text-decoration:none; font-weight:600;">
-            <?= $i ?>
-        </a>
-    <?php endfor; ?>
-
-    <?php if ($page < $totalPages): ?>
-        <a href="?page=<?= $page+1 ?>" style="margin:0 8px; text-decoration:none; font-weight:600;">Next ➡</a>
-    <?php endif; ?>
+    <div class="overlay-counter" id="overlayCounter"></div>
 </div>
 
 <!-- Lightbox -->
@@ -368,203 +287,122 @@ $totalPages = ceil($totalAlbums / $albumsPerPage);
 </div>
 
 <script>
-    const IMAGES_PER_PAGE = 12;
-    let overlayPage = 1;
+const IMAGES_PER_PAGE = 12;
+let overlayPage = 1;
 
-    // Auto hide toast
-    setTimeout(() => {
-        document.querySelectorAll('.toast').forEach(t => t.remove());
-    }, 3500);
+setTimeout(() => document.querySelectorAll('.toast').forEach(t => t.remove()), 3500);
 
-    // Upload Modal
-    const uploadBtn = document.getElementById('uploadBtn');
-    const uploadModal = document.getElementById('uploadModal');
-    const closeUpload = document.querySelector('.close-upload');
-    uploadBtn.addEventListener('click', () => { uploadModal.style.display = 'flex'; });
-    closeUpload.addEventListener('click', () => { uploadModal.style.display = 'none'; });
-    window.addEventListener('click', (e) => { if(e.target==uploadModal) uploadModal.style.display='none'; });
+const uploadBtn = document.getElementById('uploadBtn');
+const uploadModal = document.getElementById('uploadModal');
+const closeUpload = document.querySelector('.close-upload');
+uploadBtn.addEventListener('click', () => uploadModal.style.display = 'flex');
+closeUpload.addEventListener('click', () => uploadModal.style.display = 'none');
+window.addEventListener('click', e => { if(e.target==uploadModal) uploadModal.style.display='none'; });
 
-    const imagesGrouped = <?php echo json_encode($imagesGrouped); ?>;
-    const folderOverlay = document.getElementById('folderOverlay');
-    const overlayImages = document.getElementById('overlayImages');
-    const closeOverlay = document.querySelector('.close-overlay');
+const imagesGrouped = <?php
+$imagesGrouped = [];
+$allImages = mysqli_query($conn, "SELECT * FROM gallery ORDER BY id DESC");
+while($img = mysqli_fetch_assoc($allImages)){
+    $event_folder = preg_replace('/[^a-zA-Z0-9_-]/', '_', $img['event_name']);
+    $imagesGrouped[$event_folder][] = $img;
+}
+echo json_encode($imagesGrouped);
+?>;
 
-    const lightbox = document.getElementById('lightbox');
-    const lightboxImg = document.getElementById('lightboxImg');
-    const closeLightbox = document.querySelector('.close-lightbox');
-    const prevBtn = document.querySelector('.prev');
-    const nextBtn = document.querySelector('.next');
+const folderOverlay = document.getElementById('folderOverlay');
+const overlayImages = document.getElementById('overlayImages');
+const closeOverlay = document.querySelector('.close-overlay');
+const overlayCounter = document.getElementById('overlayCounter');
 
-    let currentImages = [];
-    let currentIndex = 0;
-    let activeEvent = '';
+const lightbox = document.getElementById('lightbox');
+const lightboxImg = document.getElementById('lightboxImg');
+const closeLightbox = document.querySelector('.close-lightbox');
+const prevBtn = document.querySelector('.prev');
+const nextBtn = document.querySelector('.next');
 
-    // Folder Overlay
-    document.querySelectorAll('.folder').forEach(folder => {
-        folder.addEventListener('click', () => {
-            activeEvent = folder.getAttribute('data-event');
-            currentImages = imagesGrouped[activeEvent] || [];
-            overlayPage = 1;
+let currentImages = [];
+let currentIndex = 0;
+let activeEvent = '';
 
-            renderOverlayImages(activeEvent);
-            folderOverlay.style.display = 'flex';
-        });
-    });
-
-    closeOverlay.onclick = () => {
-        folderOverlay.style.display = 'none';
+document.querySelectorAll('.folder').forEach(folder => {
+    folder.addEventListener('click', () => {
+        activeEvent = folder.getAttribute('data-event');
+        currentImages = imagesGrouped[activeEvent] || [];
         overlayPage = 1;
-    };
-    window.onclick = (e) => { if(e.target==folderOverlay) folderOverlay.style.display='none'; };
-
-    // Lightbox
-    closeLightbox.onclick = () => lightbox.style.display='none';
-    window.onclick = (e) => { if(e.target==lightbox) lightbox.style.display='none'; };
-
-    function showLightboxImage(index){
-        if(currentImages[index]){
-            lightboxImg.src = `../uploads/gallery/${currentImages[index].event_name.replace(/[^a-zA-Z0-9_-]/g,'_')}/${currentImages[index].filename}`;
-            currentIndex = index;
-        }
-    }
-    prevBtn.onclick = () => { currentIndex = (currentIndex - 1 + currentImages.length) % currentImages.length; showLightboxImage(currentIndex); };
-    nextBtn.onclick = () => { currentIndex = (currentIndex + 1) % currentImages.length; showLightboxImage(currentIndex); };
-    const renameModal = document.getElementById('renameModal');
-    const oldEventInput = document.getElementById('oldEvent');
-
-    document.querySelectorAll('.folder').forEach(folder => {
-
-        // Prevent album open when clicking buttons
-        folder.querySelector('.rename-btn').onclick = (e) => {
-            e.stopPropagation();
-            oldEventInput.value = folder.dataset.name;
-            renameModal.style.display = 'flex';
-        };
-
-        folder.querySelector('.delete-btn').onclick = (e) => {
-            e.stopPropagation();
-            if (confirm('Delete entire album?')) {
-                window.location.href = `?delete_album=${folder.dataset.name}`;
-            }
-        };
-
+        renderOverlayImages(activeEvent);
+        folderOverlay.style.display = 'flex';
     });
-    function renderOverlayImages(event) {
-    overlayImages.innerHTML = '';
 
-    // 🔹 Bulk action bar
+    folder.querySelector('.rename-btn').onclick = e => {
+        e.stopPropagation();
+        document.getElementById('oldEvent').value = folder.dataset.name;
+        document.getElementById('renameModal').style.display='flex';
+    };
+
+    folder.querySelector('.delete-btn').onclick = e => {
+        e.stopPropagation();
+        if(confirm('Delete entire album?')) window.location.href=`?delete_album=${folder.dataset.name}`;
+    };
+});
+
+closeOverlay.onclick = () => folderOverlay.style.display='none';
+window.onclick = e => { if(e.target==folderOverlay) folderOverlay.style.display='none'; };
+closeLightbox.onclick = () => lightbox.style.display='none';
+window.addEventListener('keydown', e => {
+    if(lightbox.style.display==='flex'){
+        if(e.key==='ArrowLeft'){ currentIndex = (currentIndex-1+currentImages.length)%currentImages.length; showLightboxImage(currentIndex);}
+        if(e.key==='ArrowRight'){ currentIndex = (currentIndex+1)%currentImages.length; showLightboxImage(currentIndex);}
+    }
+});
+
+prevBtn.onclick = () => { currentIndex = (currentIndex-1+currentImages.length)%currentImages.length; showLightboxImage(currentIndex);}
+nextBtn.onclick = () => { currentIndex = (currentIndex+1)%currentImages.length; showLightboxImage(currentIndex);}
+
+function showLightboxImage(index){
+    if(currentImages[index]){
+        lightboxImg.src = `../uploads/gallery/${currentImages[index].event_name.replace(/[^a-zA-Z0-9_-]/g,'_')}/${currentImages[index].filename}`;
+        currentIndex = index;
+    }
+}
+
+function renderOverlayImages(event){
+    overlayImages.innerHTML='';
     const bulkBar = document.createElement('div');
-    bulkBar.className = 'bulk-actions';
-
-    bulkBar.innerHTML = `
-        <label>
-            <input type="checkbox" id="selectAll"> Select All
-        </label>
-        <button id="deleteSelected">🗑 Delete Selected</button>
-    `;
-
+    bulkBar.className='bulk-actions';
+    bulkBar.innerHTML = `<label><input type="checkbox" id="selectAll"> Select All</label>
+                         <button id="deleteSelected">🗑 Delete Selected</button>`;
     overlayImages.appendChild(bulkBar);
 
-    const start = (overlayPage - 1) * IMAGES_PER_PAGE;
-    const end = start + IMAGES_PER_PAGE;
-    const pageImages = currentImages.slice(start, end);
+    const start = (overlayPage-1)*IMAGES_PER_PAGE;
+    const end = start+IMAGES_PER_PAGE;
+    const pageImages = currentImages.slice(start,end);
 
-    pageImages.forEach((img, index) => {
-        const realIndex = start + index;
-
-        const container = document.createElement('div');
-        container.className = 'image-container';
-
-            const checkbox = document.createElement('input');
-            checkbox.type = 'checkbox';
-            checkbox.className = 'image-checkbox';
-            checkbox.value = img.id;
-
-        const imgEl = document.createElement('img');
-        imgEl.src = `../uploads/gallery/${event}/${img.filename}`;
-        imgEl.alt = img.title;
-
-        imgEl.onclick = () => {
-            currentIndex = realIndex;
-            lightboxImg.src = imgEl.src;
-            lightbox.style.display = 'flex';
-        };
-
-        container.appendChild(checkbox);
-        container.appendChild(imgEl);
-        overlayImages.appendChild(container);
+    pageImages.forEach((img,i)=>{
+        const container = document.createElement('div'); container.className='image-container';
+        const checkbox = document.createElement('input'); checkbox.type='checkbox'; checkbox.className='image-checkbox'; checkbox.value=img.id;
+        const imgEl = document.createElement('img'); imgEl.src=`../uploads/gallery/${event}/${img.filename}`; imgEl.alt=img.title;
+        imgEl.onclick=()=>{currentIndex=start+i; lightboxImg.src=imgEl.src; lightbox.style.display='flex';};
+        container.appendChild(checkbox); container.appendChild(imgEl); overlayImages.appendChild(container);
     });
 
-    // Select all logic
-    document.getElementById('selectAll').onclick = function () {
-        document.querySelectorAll('.image-checkbox').forEach(cb => {
-            cb.checked = this.checked;
-        });
-    };
-
-    // Bulk delete
-    document.getElementById('deleteSelected').onclick = function () {
-        const selected = [...document.querySelectorAll('.image-checkbox:checked')]
-            .map(cb => cb.value);
-
-        if (selected.length === 0) {
-            alert('No images selected');
-            return;
-        }
-
-        if (!confirm(`Delete ${selected.length} selected image(s)?`)) return;
-
-        // Redirect with IDs
-        window.location.href = `?bulk_delete=${selected.join(',')}`;
-    };
-
-    renderOverlayPagination();
-}
-
-function renderOverlayPagination() {
-    const totalPages = Math.ceil(currentImages.length / IMAGES_PER_PAGE);
-
-    if (totalPages <= 1) return;
-
-    const nav = document.createElement('div');
-    nav.style.cssText = `
-        grid-column: 1 / -1;
-        display: flex;
-        justify-content: center;
-        gap: 12px;
-        margin-top: 20px;
-    `;
-
-    if (overlayPage > 1) {
-        const prev = document.createElement('button');
-        prev.innerText = '⬅ Prev';
-        prev.onclick = () => {
-            overlayPage--;
-            renderOverlayImages(activeEvent);
-        };
-        nav.appendChild(prev);
+    document.getElementById('selectAll').onclick=function(){document.querySelectorAll('.image-checkbox').forEach(cb=>cb.checked=this.checked);}
+    document.getElementById('deleteSelected').onclick=function(){
+        const selected=[...document.querySelectorAll('.image-checkbox:checked')].map(cb=>cb.value);
+        if(!selected.length) return alert('No images selected');
+        if(!confirm(`Delete ${selected.length} selected image(s)?`)) return;
+        window.location.href=`?bulk_delete=${selected.join(',')}`;
     }
 
-    const pageInfo = document.createElement('span');
-    pageInfo.style.color = '#fff';
-    pageInfo.style.fontWeight = '600';
-    pageInfo.innerText = `Page ${overlayPage} / ${totalPages}`;
-    nav.appendChild(pageInfo);
+    const totalPages = Math.ceil(currentImages.length/IMAGES_PER_PAGE);
+    if(totalPages<=1){ overlayCounter.innerText=`${start+1} - ${Math.min(end,currentImages.length)} / ${currentImages.length}`; return;}
+    overlayCounter.innerText=`${start+1} - ${Math.min(end,currentImages.length)} / ${currentImages.length}`;
 
-    if (overlayPage < totalPages) {
-        const next = document.createElement('button');
-        next.innerText = 'Next ➡';
-        next.onclick = () => {
-            overlayPage++;
-            renderOverlayImages(activeEvent);
-        };
-        nav.appendChild(next);
-    }
-
+    const nav = document.createElement('div'); nav.style.cssText='grid-column:1/-1; display:flex; justify-content:center; gap:12px; margin-top:20px;';
+    if(overlayPage>1){ const prev=document.createElement('button'); prev.innerText='⬅ Prev'; prev.onclick=()=>{overlayPage--; renderOverlayImages(event);}; nav.appendChild(prev);}
+    const pageInfo=document.createElement('span'); pageInfo.style.color='#fff'; pageInfo.style.fontWeight='600'; pageInfo.innerText=`Page ${overlayPage} / ${totalPages}`; nav.appendChild(pageInfo);
+    if(overlayPage<totalPages){ const next=document.createElement('button'); next.innerText='Next ➡'; next.onclick=()=>{overlayPage++; renderOverlayImages(event);}; nav.appendChild(next);}
     overlayImages.appendChild(nav);
 }
-
-
 </script>
 </body>
 </html>

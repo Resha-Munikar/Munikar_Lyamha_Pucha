@@ -74,7 +74,6 @@ $current_page = basename($_SERVER['PHP_SELF']);
 }
 
 /* Logout button style */
-/* Logout button style */
 .logout-btn {
     background: #FFD200 !important;
     color: #C00000 !important;
