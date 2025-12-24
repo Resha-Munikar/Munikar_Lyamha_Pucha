@@ -164,8 +164,8 @@ $totalPages = ceil($totalAlbums / $albumsPerPage);
         .folder-name { margin-top:8px; font-weight:600; text-align:center; word-wrap:break-word; }
 
         /* Overlay for folder images */
-        .folder-overlay { position: fixed; top:0; left:0; width:99%; height:90%; background: rgba(0,0,0,0.6); backdrop-filter: blur(6px); display: none; justify-content: center; align-items: center; z-index: 2000; overflow: auto; padding: 40px 20px; }
-        .folder-overlay .overlay-content { display: grid; grid-template-columns: repeat(auto-fill,minmax(180px,1fr)); gap: 20px; max-width: 1200px; width: 100%; }
+        .folder-overlay {position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; z-index: 2000; overflow: auto; padding: 40px; }
+        .folder-overlay .overlay-content { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 20px; max-width: 1200px; width: 100%; }
         .folder-overlay .image-container { position: relative; }
         .folder-overlay img { width:100%; border-radius:8px; cursor:pointer; transition: none; }
         .folder-overlay img:hover { transform: none; }
