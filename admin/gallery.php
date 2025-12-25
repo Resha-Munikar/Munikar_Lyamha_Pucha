@@ -191,6 +191,8 @@ $totalPages = ceil($totalAlbums / $albumsPerPage);
         .bulk-actions label { color: white; font-weight: 600; }
         .bulk-actions button { background: #dc3545; color: white; border: none; padding: 6px 14px; border-radius: 6px; font-weight: 600; cursor: pointer; }
         .bulk-actions button:hover { background: #b52a37; }
+        .overlay-counter { display: none;}
+        .lightbox-counter { position: absolute; bottom: 25px; left: 50%; transform: translateX(-50%); color: #ffffff; font-size: 14px; font-weight: 600; opacity: 0.9; }
 
     </style>
 </head>
@@ -272,6 +274,7 @@ $totalPages = ceil($totalAlbums / $albumsPerPage);
     <img id="lightboxImg" src="" alt="">
     <span class="prev">&#10094;</span>
     <span class="next">&#10095;</span>
+    <div class="lightbox-counter" id="lightboxCounter"></div>
 </div>
 
 <div class="upload-modal" id="renameModal">
@@ -362,6 +365,9 @@ function showLightboxImage(index){
     if(currentImages[index]){
         lightboxImg.src = `../uploads/gallery/${currentImages[index].event_name.replace(/[^a-zA-Z0-9_-]/g,'_')}/${currentImages[index].filename}`;
         currentIndex = index;
+
+        document.getElementById('lightboxCounter').innerText =
+            `${currentIndex + 1} / ${currentImages.length}`;
     }
 }
 
@@ -381,7 +387,11 @@ function renderOverlayImages(event){
         const container = document.createElement('div'); container.className='image-container';
         const checkbox = document.createElement('input'); checkbox.type='checkbox'; checkbox.className='image-checkbox'; checkbox.value=img.id;
         const imgEl = document.createElement('img'); imgEl.src=`../uploads/gallery/${event}/${img.filename}`; imgEl.alt=img.title;
-        imgEl.onclick=()=>{currentIndex=start+i; lightboxImg.src=imgEl.src; lightbox.style.display='flex';};
+        imgEl.onclick = () => {
+            currentIndex = start + i;
+            showLightboxImage(currentIndex);
+            lightbox.style.display = 'flex';
+        };
         container.appendChild(checkbox); container.appendChild(imgEl); overlayImages.appendChild(container);
     });
 
