@@ -10,37 +10,72 @@ if (!isset($_SESSION['admin'])) {
 // Handle upload
 $success = '';
 $error = '';
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['images'])) {
-    $event_name = $_POST['event_name'] ?? '';
+
+    $event_name = trim($_POST['event_name'] ?? '');
     $files = $_FILES['images'];
 
-    if (!$event_name || !$files) {
+    // ✅ LIMIT: max 20 images
+    if (count($files['name']) > 20) {
+        $error = "You can upload a maximum of 20 images at a time.";
+    }
+    elseif (!$event_name || empty($files['name'][0])) {
         $error = "Please enter an event name and select at least one image.";
-    } else {
+    }
+    else {
+
         $event_folder = '../uploads/gallery/' . preg_replace('/[^a-zA-Z0-9_-]/', '_', $event_name);
-        if (!is_dir($event_folder)) mkdir($event_folder, 0777, true);
+
+        if (!is_dir($event_folder)) {
+            mkdir($event_folder, 0777, true);
+        }
 
         $uploaded = 0;
         $failed = 0;
 
         foreach ($files['name'] as $key => $name) {
-            $tmp_name = $files['tmp_name'][$key];
+
+            $tmp_name  = $files['tmp_name'][$key];
             $error_code = $files['error'][$key];
 
             if ($error_code === 0) {
-                $ext = pathinfo($name, PATHINFO_EXTENSION);
-                $filename = uniqid() . "." . $ext;
+
+                $ext = strtolower(pathinfo($name, PATHINFO_EXTENSION));
+                $allowed = ['jpg', 'jpeg', 'png', 'webp'];
+
+                if (!in_array($ext, $allowed)) {
+                    $failed++;
+                    continue;
+                }
+
+                $filename = uniqid() . '.' . $ext;
                 $target = $event_folder . '/' . $filename;
 
                 if (move_uploaded_file($tmp_name, $target)) {
-                    mysqli_query($conn, "INSERT INTO gallery (title, filename, event_name) VALUES ('$event_name', '$filename', '$event_name')");
+
+                    mysqli_query(
+                        $conn,
+                        "INSERT INTO gallery (title, filename, event_name)
+                         VALUES ('$event_name', '$filename', '$event_name')"
+                    );
+
                     $uploaded++;
-                } else $failed++;
-            } else $failed++;
+                } else {
+                    $failed++;
+                }
+            } else {
+                $failed++;
+            }
         }
 
-        if ($uploaded > 0) $success = "$uploaded image(s) uploaded successfully!";
-        if ($failed > 0) $error = "$failed image(s) failed to upload.";
+        if ($uploaded > 0) {
+            $success = "$uploaded image(s) uploaded successfully!";
+        }
+
+        if ($failed > 0) {
+            $error = "$failed image(s) failed to upload.";
+        }
     }
 }
 
@@ -251,7 +286,7 @@ $totalPages = ceil($totalAlbums / $albumsPerPage);
         <span class="close-upload">&times;</span>
         <form action="" method="POST" enctype="multipart/form-data">
             <label>Event Name</label>
-            <input type="text" name="event_name" placeholder="Enter event name" required>
+            <input type="text" name="event_name" id="eventNameInput" placeholder="Enter event name" required>
             <label>Select Images</label>
             <input type="file" name="images[]" multiple required>
             <div style="text-align:right; margin-top:10px;">
@@ -264,6 +299,16 @@ $totalPages = ceil($totalAlbums / $albumsPerPage);
 <!-- Folder Overlay -->
 <div class="folder-overlay" id="folderOverlay">
     <span class="close-overlay">&times;</span>
+
+    <!-- Upload more button -->
+    <div style="margin-bottom:20px;">
+        <button id="uploadMoreBtn"
+            style="padding:10px 18px;background:#008736;color:#fff;border:none;
+            border-radius:6px;font-weight:600;cursor:pointer;">
+            ➕ Upload More Photos
+        </button>
+    </div>
+
     <div class="overlay-content" id="overlayImages"></div>
     <div class="overlay-counter" id="overlayCounter"></div>
 </div>
@@ -290,6 +335,21 @@ $totalPages = ceil($totalAlbums / $albumsPerPage);
 </div>
 
 <script>
+document.addEventListener('DOMContentLoaded', () => {
+
+    const fileInput = document.querySelector('input[name="images[]"]');
+
+    if (fileInput) {
+        fileInput.addEventListener('change', function () {
+
+            if (this.files.length > 20) {
+                alert("⚠️ Maximum 20 images allowed per upload.");
+                this.value = ""; // clear selection
+            }
+
+        });
+    }
+});
 const IMAGES_PER_PAGE = 12;
 let overlayPage = 1;
 
@@ -298,7 +358,11 @@ setTimeout(() => document.querySelectorAll('.toast').forEach(t => t.remove()), 3
 const uploadBtn = document.getElementById('uploadBtn');
 const uploadModal = document.getElementById('uploadModal');
 const closeUpload = document.querySelector('.close-upload');
-uploadBtn.addEventListener('click', () => uploadModal.style.display = 'flex');
+uploadBtn.addEventListener('click', () => {
+    eventNameInput.value = '';
+    eventNameInput.readOnly = false;
+    uploadModal.style.display = 'flex';
+});
 closeUpload.addEventListener('click', () => uploadModal.style.display = 'none');
 window.addEventListener('click', e => { if(e.target==uploadModal) uploadModal.style.display='none'; });
 
@@ -311,6 +375,15 @@ while($img = mysqli_fetch_assoc($allImages)){
 }
 echo json_encode($imagesGrouped);
 ?>;
+
+const fileInput = document.querySelector('input[name="images[]"]');
+
+fileInput.addEventListener('change', function () {
+    if (this.files.length > 20) {
+        alert("⚠️ You can upload a maximum of 20 images at a time.");
+        this.value = ""; // reset file selection
+    }
+});
 
 const folderOverlay = document.getElementById('folderOverlay');
 const overlayImages = document.getElementById('overlayImages');
@@ -387,11 +460,11 @@ function renderOverlayImages(event){
         const container = document.createElement('div'); container.className='image-container';
         const checkbox = document.createElement('input'); checkbox.type='checkbox'; checkbox.className='image-checkbox'; checkbox.value=img.id;
         const imgEl = document.createElement('img'); imgEl.src=`../uploads/gallery/${event}/${img.filename}`; imgEl.alt=img.title;
-        imgEl.onclick = () => {
-            currentIndex = start + i;
-            showLightboxImage(currentIndex);
-            lightbox.style.display = 'flex';
-        };
+    imgEl.onclick = () => {
+        currentIndex = start + i;
+        showLightboxImage(currentIndex);
+        lightbox.style.display = 'flex';
+    };
         container.appendChild(checkbox); container.appendChild(imgEl); overlayImages.appendChild(container);
     });
 
@@ -413,6 +486,23 @@ function renderOverlayImages(event){
     if(overlayPage<totalPages){ const next=document.createElement('button'); next.innerText='Next ➡'; next.onclick=()=>{overlayPage++; renderOverlayImages(event);}; nav.appendChild(next);}
     overlayImages.appendChild(nav);
 }
+
+const uploadMoreBtn = document.getElementById('uploadMoreBtn');
+const eventNameInput = document.getElementById('eventNameInput');
+
+uploadMoreBtn.addEventListener('click', () => {
+
+    // Get readable event name from current folder
+    const originalEventName = currentImages.length
+        ? currentImages[0].event_name
+        : '';
+
+    // Set event name & lock it
+    eventNameInput.value = originalEventName;
+    eventNameInput.readOnly = true;
+
+    uploadModal.style.display = 'flex';
+});
 </script>
 </body>
 </html>
