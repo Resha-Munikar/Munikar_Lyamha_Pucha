@@ -150,7 +150,7 @@ body {
 .wwa-section {
     position: relative;
     padding: 100px 20px;
-    background: var(--red);;
+    background: linear-gradient(135deg, #C00000, #008736);
     color: white;
     overflow: hidden;
     text-align: center;
