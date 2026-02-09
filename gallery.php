@@ -3,8 +3,16 @@ include 'includes/header.php';
 include 'includes/navbar.php';
 include 'includes/db.php';
 
-// Fetch all distinct events
+/* Fetch events */
 $eventsResult = mysqli_query($conn, "SELECT DISTINCT event_name FROM gallery ORDER BY uploaded_at DESC");
+
+/* Group images */
+$grouped = [];
+$all = mysqli_query($conn, "SELECT event_name, filename FROM gallery ORDER BY uploaded_at DESC");
+while($img = mysqli_fetch_assoc($all)) {
+    $key = preg_replace('/[^a-zA-Z0-9_-]/', '_', $img['event_name']);
+    $grouped[$key][] = $img;
+}
 ?>
 
 <!DOCTYPE html>
@@ -14,152 +22,195 @@ $eventsResult = mysqli_query($conn, "SELECT DISTINCT event_name FROM gallery ORD
 <title>Gallery</title>
 
 <style>
-body {
+body{
     font-family: 'Open Sans', sans-serif;
-    background: #f3f3f3;
-    margin: 0;
+    background:#f4f4f4;
+    margin:0;
 }
 
-#mainContent {
-    padding: 0 100px 60px;
+#mainContent{
+    max-width:1400px;
+    margin:auto;
+    padding:20px 20px 60px;
 }
 
-h1 {
-    text-align: center;
-    font-size: 36px;
-    color: #b30000;
-    margin:60px 0px 20px 0px;
+h1{
+    text-align:center;
+    font-size:36px;
+    color:#b30000;
+    margin:60px 0 30px;
 }
 
-/* Folder grid */
-.folders {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 30px;
+/* FOLDERS */
+.folders{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+    gap:30px;
 }
 
-@media (max-width: 1200px) {
-    .folders { grid-template-columns: repeat(4, 1fr); }
-}
-@media (max-width: 900px) {
-    .folders { grid-template-columns: repeat(3, 1fr); }
-}
-@media (max-width: 600px) {
-    .folders { grid-template-columns: repeat(2, 1fr); }
-}
-
-.folder {
-    background: #f3f3f3;
-    border-radius: 12px;
-    padding: 20px;
-    text-align: center;
-    cursor: pointer;
-    /* box-shadow: 0 6px 18px rgba(0,0,0,0.1); */
+.folder{
+    background:white;
+    border-radius:14px;
+    padding:25px;
+    text-align:center;
+    cursor:pointer;
+    box-shadow:0 6px 18px rgba(0,0,0,0.1);
+    transition:.3s;
 }
 
-.folder:hover {
-    transform: translateY(-3px);
+.folder:hover{
+    transform:translateY(-5px);
 }
 
-.folder-icon { font-size: 60px; }
-.folder-name { font-weight: 600; margin-top: 10px; }
+.folder-icon i{
+    font-size:50px;
+    color:#A67C37;
+}
+
+.folder-name{
+    font-weight:600;
+    margin-top:10px;
+}
+
+.folder small{
+    color:#777;
+}
 
 /* OVERLAY */
-.folder-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.85);
-    display: none;
-    justify-content: center;
-    align-items: center;
-    z-index: 10000;
-    padding: 40px;
+.folder-overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.9);
+    display:none;
+    justify-content:center;
+    align-items:center;
+    z-index:10000;
+    padding:40px;
 }
 
-.overlay-content {
-    max-width: 1200px;
-    width: 100%;
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 20px;
+.overlay-box{
+    width:100%;
+    max-width:1200px;
+    background:#111;
+    border-radius:12px;
+    padding:20px;
 }
 
-.overlay-content img {
-    width: 100%;
-    border-radius: 12px;
-    cursor: pointer;
+.overlay-title{
+    color:white;
+    text-align:center;
+    margin-bottom:15px;
+    font-size:22px;
 }
 
-.close-overlay {
-    position: absolute;
-    top: 20px;
-    right: 30px;
-    font-size: 36px;
-    color: white;
-    cursor: pointer;
+/* GRID WITH SCROLLBAR */
+.overlay-content{
+    max-height:75vh;
+    overflow-y:auto;
+
+    display:grid;
+    grid-template-columns:repeat(auto-fill,220px);
+    gap:20px;
+    justify-content:center;
+    padding-right:10px;
+}
+
+/* scrollbar */
+.overlay-content::-webkit-scrollbar{
+    width:8px;
+}
+.overlay-content::-webkit-scrollbar-thumb{
+    background:#ffcc00;
+    border-radius:10px;
+}
+.overlay-content::-webkit-scrollbar-track{
+    background:rgba(255,255,255,0.1);
+}
+
+/* IMAGE BOX FIXED SIZE */
+.img-box{
+    width:220px;
+    height:220px;
+    overflow:hidden;
+    border-radius:12px;
+}
+
+.img-box img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    cursor:pointer;
+    transition:transform .3s;
+}
+
+.img-box img:hover{
+    transform:scale(1.05);
+}
+
+.close-overlay{
+    position:absolute;
+    top:20px;
+    right:30px;
+    font-size:36px;
+    color:white;
+    cursor:pointer;
 }
 
 /* LIGHTBOX */
-.lightbox {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.9);
-    z-index: 20000;
-    justify-content: center;
-    align-items: center;
+.lightbox{
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.95);
+    z-index:20000;
+    justify-content:center;
+    align-items:center;
 }
 
-.lightbox img {
-    max-width: 90%;
-    max-height: 80%;
-    border-radius: 12px;
+.lightbox img{
+    max-width:90%;
+    max-height:80%;
+    border-radius:12px;
 }
 
-.lightbox .close {
-    position: absolute;
-    top: 20px;
-    right: 30px;
-    font-size: 32px;
-    color: white;
-    cursor: pointer;
+.lightbox .close{
+    position:absolute;
+    top:20px;
+    right:30px;
+    font-size:32px;
+    color:white;
+    cursor:pointer;
 }
 
-/* Navigation arrows */
-.nav {
-    position: absolute;
-    top: 50%;
-    font-size: 50px;
-    color: white;
-    cursor: pointer;
-    padding: 12px;
-    transform: translateY(-50%);
-    user-select: none;
+.nav{
+    position:absolute;
+    top:50%;
+    font-size:50px;
+    color:white;
+    cursor:pointer;
+    transform:translateY(-50%);
 }
 
-.nav.prev { left: 30px; }
-.nav.next { right: 30px; }
-.nav:hover { color: #ffcc00; }
+.nav.prev{ left:30px; }
+.nav.next{ right:30px; }
+.nav:hover{ color:#ffcc00; }
 
-/* Counter */
-.counter {
-    position: absolute;
-    bottom: 30px;
-    color: white;
-    font-size: 14px;
-    font-weight: 600;
+.counter{
+    position:absolute;
+    bottom:30px;
+    color:white;
 }
 
-.folder-icon i {
-    font-size: 50px;      
-    color: #A67C37;       
-    transition: transform 0.2s;
+.download-btn{
+    position:absolute;
+    top:20px;
+    left:30px;
+    background:#ffcc00;
+    padding:8px 14px;
+    border-radius:6px;
+    text-decoration:none;
+    color:black;
 }
-
-.folder:hover .folder-icon i {
-    transform: scale(1.1);  /* Slight zoom on hover */
-}
-
 </style>
 </head>
 
@@ -172,125 +223,131 @@ h1 {
 <?php while($eventRow = mysqli_fetch_assoc($eventsResult)):
     $eventName = $eventRow['event_name'];
     $safeFolder = preg_replace('/[^a-zA-Z0-9_-]/', '_', $eventName);
+    $count = count($grouped[$safeFolder] ?? []);
 ?>
-    <div class="folder" data-event="<?= $safeFolder ?>">
-        <!-- <div class="folder-icon">🖼️</div>   Image folder -->
-        <div class="folder-icon"><i class="fa-solid fa-images"></i></div>
-
-        <div class="folder-name"><?= htmlspecialchars($eventName) ?></div>
-    </div>
+<div class="folder" data-event="<?= $safeFolder ?>" data-name="<?= htmlspecialchars($eventName) ?>">
+    <div class="folder-icon"><i class="fa-solid fa-images"></i></div>
+    <div class="folder-name"><?= htmlspecialchars($eventName) ?></div>
+    <small><?= $count ?> Photos</small>
+</div>
 <?php endwhile; ?>
 </div>
 </div>
 
 <?php include 'includes/footer.php'; ?>
 
-<!-- ================= FOLDER OVERLAY ================= -->
+<!-- OVERLAY -->
 <div class="folder-overlay" id="folderOverlay">
     <span class="close-overlay">&times;</span>
-    <div class="overlay-content" id="overlayImages"></div>
+
+    <div class="overlay-box">
+        <div class="overlay-title" id="overlayTitle"></div>
+        <div class="overlay-content" id="overlayImages"></div>
+    </div>
 </div>
 
-<!-- ================= LIGHTBOX ================= -->
+<!-- LIGHTBOX -->
 <div class="lightbox" id="lightbox">
     <span class="close" onclick="closeLightbox()">&times;</span>
+    <a id="downloadBtn" class="download-btn" download>⬇ Download</a>
+
     <span class="nav prev" onclick="prevImage()">&#10094;</span>
-    <img id="lightbox-img" src="" alt="">
+    <img id="lightbox-img">
     <span class="nav next" onclick="nextImage()">&#10095;</span>
     <div class="counter" id="imageCounter"></div>
 </div>
 
 <script>
-const imagesGrouped = <?php
-$grouped = [];
-$all = mysqli_query($conn, "SELECT * FROM gallery ORDER BY uploaded_at DESC");
-while($img = mysqli_fetch_assoc($all)) {
-    $key = preg_replace('/[^a-zA-Z0-9_-]/', '_', $img['event_name']);
-    $grouped[$key][] = $img;
-}
-echo json_encode($grouped);
-?>;
+const imagesGrouped = <?= json_encode($grouped); ?>;
 
 const folders = document.querySelectorAll('.folder');
 const overlay = document.getElementById('folderOverlay');
 const overlayImages = document.getElementById('overlayImages');
+const overlayTitle = document.getElementById('overlayTitle');
 const mainContent = document.getElementById('mainContent');
+
 const lightbox = document.getElementById('lightbox');
 const lightboxImg = document.getElementById('lightbox-img');
 const counter = document.getElementById('imageCounter');
+const downloadBtn = document.getElementById('downloadBtn');
 
 let currentImages = [];
 let currentIndex = 0;
 
-/* Folder open */
-folders.forEach(folder => {
-    folder.addEventListener('click', () => {
+/* OPEN FOLDER */
+folders.forEach(folder=>{
+    folder.addEventListener('click',()=>{
         const event = folder.dataset.event;
+        const name = folder.dataset.name;
+
+        overlayTitle.innerText = name;
         overlayImages.innerHTML = '';
         currentImages = imagesGrouped[event] || [];
 
-        currentImages.forEach((img, index) => {
+        currentImages.forEach((img,index)=>{
+            const box = document.createElement('div');
+            box.className = "img-box";
+
             const image = document.createElement('img');
             image.src = `uploads/gallery/${event}/${img.filename}`;
-            image.onclick = () => {
+            image.onclick = ()=>{
                 currentIndex = index;
                 openLightbox();
             };
-            overlayImages.appendChild(image);
+
+            box.appendChild(image);
+            overlayImages.appendChild(box);
         });
 
-        mainContent.style.display = 'none';
-        overlay.style.display = 'flex';
+        document.body.style.overflow="hidden";
+        mainContent.style.display="none";
+        overlay.style.display="flex";
     });
 });
 
-document.querySelector('.close-overlay').onclick = () => {
-    overlay.style.display = 'none';
-    mainContent.style.display = 'block';
+/* CLOSE OVERLAY */
+document.querySelector('.close-overlay').onclick = ()=>{
+    overlay.style.display="none";
+    mainContent.style.display="block";
+    document.body.style.overflow="auto";
 };
 
-/* Lightbox functions */
-function openLightbox() {
-    lightbox.style.display = 'flex';
+/* LIGHTBOX */
+function openLightbox(){
+    lightbox.style.display="flex";
     updateLightbox();
 }
 
-function updateLightbox() {
+function updateLightbox(){
     const img = currentImages[currentIndex];
     const folder = img.event_name.replace(/[^a-zA-Z0-9_-]/g,'_');
-    lightboxImg.src = `uploads/gallery/${folder}/${img.filename}`;
-    counter.innerText = `${currentIndex + 1} / ${currentImages.length}`;
+    const path = `uploads/gallery/${folder}/${img.filename}`;
+
+    lightboxImg.src = path;
+    counter.innerText = `${currentIndex+1} / ${currentImages.length}`;
+    downloadBtn.href = path;
 }
 
-function prevImage() {
+function prevImage(){
     currentIndex = (currentIndex - 1 + currentImages.length) % currentImages.length;
     updateLightbox();
 }
 
-function nextImage() {
+function nextImage(){
     currentIndex = (currentIndex + 1) % currentImages.length;
     updateLightbox();
 }
 
-function closeLightbox() {
-    lightbox.style.display = 'none';
+function closeLightbox(){
+    lightbox.style.display="none";
 }
 
-/* Keyboard navigation */
-document.addEventListener('keydown', e => {
-    if (lightbox.style.display !== 'flex') return;
-    if (e.key === 'ArrowLeft') prevImage();
-    if (e.key === 'ArrowRight') nextImage();
-    if (e.key === 'Escape') closeLightbox();
-});
-
-/* Swipe support */
-let startX = 0;
-lightbox.addEventListener('touchstart', e => startX = e.touches[0].clientX);
-lightbox.addEventListener('touchend', e => {
-    let endX = e.changedTouches[0].clientX;
-    if (startX - endX > 50) nextImage();
-    if (endX - startX > 50) prevImage();
+/* KEYBOARD */
+document.addEventListener('keydown',e=>{
+    if(lightbox.style.display!=="flex") return;
+    if(e.key==="ArrowLeft") prevImage();
+    if(e.key==="ArrowRight") nextImage();
+    if(e.key==="Escape") closeLightbox();
 });
 </script>
 
