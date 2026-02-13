@@ -17,12 +17,12 @@ h2 {
 
 /* ----------------- HERO SECTION ----------------- */
 .about-hero {
-    width: 100%; /* full width */
-    padding: 150px 20px; /* increased height */
+    width: 100%; 
+    padding: 150px 20px; 
     color: #fff;
     text-align: center;
     background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('images/hero-bg.jpg') center/cover no-repeat;
-    border-radius: 0; /* remove rounding if you want full-width edge-to-edge */
+    border-radius: 0;
     box-sizing: border-box;
 }
 

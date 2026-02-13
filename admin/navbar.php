@@ -17,7 +17,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
     <ul>
         <li><a href="dashboard.php" class="<?php echo ($current_page == 'dashboard.php') ? 'active' : ''; ?>">Message</a></li>
         <li><a href="gallery.php" class="<?php echo ($current_page == 'gallery.php') ? 'active' : ''; ?>">Gallery</a></li>
-        <li><a href="event.php" class="<?php echo ($current_page == 'event.php') ? 'active' : ''; ?>">Event</a></li>
+        <li><a href="manage-events.php" class="<?php echo ($current_page == 'manage-events.php') ? 'active' : ''; ?>">Events</a></li>
         <li><a href="logout.php" class="logout-btn">Logout</a></li>
     </ul>
 </nav>
