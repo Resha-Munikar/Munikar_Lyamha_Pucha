@@ -13,19 +13,19 @@
         </p>
     </div>
 
-    <?php if (isset($_GET['success'])): ?>
-        <p id="success-message" class="success-message" style="
-            color: #155724;
-            background: #d4edda;
-            padding: 14px;
-            text-align: center;
-            border-radius: 8px;
-            margin-bottom: 30px;
-            font-weight: 500;
-        ">
-            ✅ Thank you! Your message has been sent successfully.
-        </p>
-    <?php endif; ?>
+    <?php
+    // Check for success or error messages via GET
+    $toastMessage = '';
+    $toastType = '';
+
+    if (isset($_GET['success'])) {
+        $toastMessage = "✅ Thank you! Your message has been sent successfully.";
+        $toastType = "success";
+    } elseif (isset($_GET['error'])) {
+        $toastMessage = "❌ Something went wrong. Please try again.";
+        $toastType = "error";
+    }
+    ?>
 
     <!-- FORM + MAP -->
     <div class="contact-layout">
@@ -55,3 +55,48 @@
 </section>
 
 <?php include 'includes/footer.php'; ?>
+
+<!-- Toast Notification -->
+<?php if ($toastMessage): ?>
+<div class="toast <?= $toastType ?>">
+    <?= htmlspecialchars($toastMessage) ?>
+</div>
+<?php endif; ?>
+
+<style>
+.toast {
+    position: fixed;
+    top: 100px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 14px 20px;
+    border-radius: 8px;
+    color: white;
+    font-size: 14px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    z-index: 10000;
+    animation: slideIn 0.4s ease;
+}
+.toast.success { background: #28a745; }
+.toast.error { background: #dc3545; }
+@keyframes slideIn {
+    from { opacity: 0; transform: translate(-50%, -20px); }
+    to   { opacity: 1; transform: translate(-50%, 0); }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const toast = document.querySelector('.toast');
+    if (toast) {
+        setTimeout(() => {
+            toast.style.transition = "opacity 0.5s";
+            toast.style.opacity = "0";
+            setTimeout(() => toast.remove(), 500);
+        }, 3500); // hide after 3.5 seconds
+    }
+});
+</script>

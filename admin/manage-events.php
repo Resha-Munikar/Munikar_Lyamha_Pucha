@@ -115,15 +115,58 @@ function truncateText($text, $max = 50){
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <title>Manage Events</title>
 <style>
-body{font-family: Arial, sans-serif; background:#f4f4f4; margin:0; padding:0;}
-.container{max-width:1200px; margin:30px auto; padding:20px; background:#fff; border-radius:8px; box-shadow:0 0 15px rgba(0,0,0,0.1);}
-h2{text-align:center; color:#dc3545; margin-bottom:20px;}
-.add-btn, .bulk-btn { padding:10px 20px; background:#C00000; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:600; margin-bottom:20px; margin-right:10px;}
-.add-btn:hover, .bulk-btn:hover { background:#006626; }
-table{width:100%; border-collapse: collapse; box-shadow:0 0 10px rgba(0,0,0,0.1);}
-th{background:#008736; color:white; padding:12px; text-align:center;}
-td{padding:12px; text-align:center; border-bottom:1px solid #ddd; vertical-align: top;}
-tr:hover{background:#f9f2f2;}
+body {
+    font-family: 'Segoe UI', sans-serif; /* match other pages */
+    background: #f4f4f4;
+    margin: 0;
+    padding: 0;
+}
+.container{
+    max-width:1200px; 
+    margin:30px auto; 
+    padding:20px; 
+    background:#fff; 
+    border-radius:8px; 
+    box-shadow:0 0 15px rgba(0,0,0,0.1);
+}
+h2{
+    text-align:center; 
+    color:#dc3545; 
+    margin-bottom:20px;
+}
+.add-btn, .bulk-btn { 
+    padding:10px 20px; 
+    background:#C00000; 
+    color:white; 
+    border:none; 
+    border-radius:6px; 
+    cursor:pointer; 
+    font-weight:600; 
+    margin-bottom:20px; 
+    margin-right:10px;
+}
+.add-btn:hover, .bulk-btn:hover { 
+    background:#006626; }
+
+table{
+    width:100%; 
+    border-collapse: collapse; 
+    box-shadow:0 0 10px rgba(0,0,0,0.1);
+}
+th{
+    background:#008736; 
+    color:white; padding:12px; 
+    text-align:center;
+}
+td{
+    padding:12px; 
+    text-align:center; 
+    border-bottom:1px solid #ddd; 
+    vertical-align: top;
+}
+tr:hover{
+    background:#f9f2f2;
+}
 table td, table th {
     vertical-align: middle; 
     text-align: center;
@@ -259,15 +302,30 @@ button.submit-btn:hover{background:#006626;}
                 <input type="hidden" name="id" value="<?= $editData['id'] ?>">
                 <input type="hidden" name="old_image" value="<?= $editData['image'] ?>">
             <?php endif; ?>
-            <input type="text" name="title" placeholder="Event Title" required value="<?= htmlspecialchars($editData['title'] ?? '') ?>">
+
+            <input type="text" name="title" placeholder="Event Title" required
+                   value="<?= htmlspecialchars($editData['title'] ?? '') ?>">
+
             <textarea name="description" placeholder="Description" required><?= htmlspecialchars($editData['description'] ?? '') ?></textarea>
-            <input type="date" name="event_date" required value="<?= htmlspecialchars($editData['event_date'] ?? '') ?>">
+
+            <?php
+            $today = date('Y-m-d'); // current date
+            $eventDate = $editData['event_date'] ?? '';
+            ?>
+            <input type="date" name="event_date" required
+                value="<?= htmlspecialchars($eventDate) ?>"
+                <?= $editData ? 'min="'.$today.'"' : 'min="'.$today.'"' ?>>
+
             <input type="time" name="event_time" value="<?= htmlspecialchars($editData['event_time'] ?? '') ?>">
+
             <input type="file" name="image">
             <?php if($editData && $editData['image']): ?>
                 <img src="../uploads/gallery/events/<?= htmlspecialchars($editData['image']) ?>" width="100" style="margin-top:10px;">
             <?php endif; ?>
-            <button type="submit" class="submit-btn" name="<?= $editData ? 'update_event' : 'add_event' ?>"><?= $editData ? 'Update Event' : 'Add Event' ?></button>
+
+            <button type="submit" class="submit-btn" name="<?= $editData ? 'update_event' : 'add_event' ?>">
+                <?= $editData ? 'Update Event' : 'Add Event' ?>
+            </button>
         </form>
     </div>
 </div>
