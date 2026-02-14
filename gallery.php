@@ -42,20 +42,27 @@ h1{
 }
 
 /* FOLDERS */
-.folders{
-    display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
-    gap:30px;
+.folders {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, 180px); 
+    justify-content: center; 
+    gap: 100px;
 }
 
-.folder{
-    background:white;
-    border-radius:14px;
-    padding:25px;
-    text-align:center;
-    cursor:pointer;
-    box-shadow:0 6px 18px rgba(0,0,0,0.1);
-    transition:.3s;
+.folder {
+    width: 170px;     
+    height: 170px;    
+    background: white;
+    border-radius: 14px;
+    padding: 25px;
+    text-align: center;
+    cursor: pointer;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.1);
+    transition: .3s;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 
 .folder:hover{
