@@ -43,9 +43,10 @@ $unreadCount = $unreadRow['unread_count'];
             margin-bottom: 20px;
         }
 
-        .header h2 {
+        h2 {
             margin: 0;
             color: #b30000;
+            text-align:center;
         }
 
         .logout {
@@ -489,9 +490,7 @@ $unreadCount = $unreadRow['unread_count'];
 <?php endif; ?>
 
 <div class="container">
-    <div class="header">
         <h2>📩 Contact Messages</h2>
-    </div>
 
     <input type="text" id="searchInput" placeholder="🔍 Search messages..." class="search-box">
 

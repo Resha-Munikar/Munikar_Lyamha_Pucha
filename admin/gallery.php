@@ -146,27 +146,13 @@ if (isset($_POST['old_event'], $_POST['new_event'])) {
         $success = "Album renamed successfully!";
     }
 }
-
-// Pagination for albums
-$albumsPerPage = 6;
-$page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
-$offset = ($page - 1) * $albumsPerPage;
-
-// Fetch albums with LIMIT for pagination
 $eventsResult = mysqli_query(
     $conn,
-    "SELECT event_name, filename 
-     FROM gallery 
-     GROUP BY event_name 
-     ORDER BY event_name ASC 
-     LIMIT $albumsPerPage OFFSET $offset"
+    "SELECT event_name, MAX(id) as latest_id, filename
+     FROM gallery
+     GROUP BY event_name
+     ORDER BY latest_id DESC"
 );
-
-// Total albums
-$totalAlbumsRes = mysqli_query($conn, "SELECT COUNT(DISTINCT event_name) AS total FROM gallery");
-$totalAlbumsRow = mysqli_fetch_assoc($totalAlbumsRes);
-$totalAlbums = $totalAlbumsRow['total'];
-$totalPages = ceil($totalAlbums / $albumsPerPage);
 
 ?>
 
@@ -181,7 +167,7 @@ $totalPages = ceil($totalAlbums / $albumsPerPage);
         #uploadBtn { padding:10px 20px; background:#C00000; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:600; margin-bottom:20px;}
         #uploadBtn:hover { background:#006626; }
 
-        h2 { color:#C00000; margin-bottom:20px; }
+        h2 { color:#C00000; margin-bottom:20px; text-align:center;}
 
         .toast { position: fixed; top: 100px; left: 50%; transform: translateX(-50%); padding: 14px 20px; border-radius: 8px; color: white; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 10px; z-index: 10000; animation: slideIn 0.4s ease;}
         .toast.success { background: #28a745; }
@@ -240,10 +226,14 @@ $totalPages = ceil($totalAlbums / $albumsPerPage);
 <?php endif; ?>
 
 <div class="container">
-
-    <button id="uploadBtn"><span style="font-size:18px; font-weight:700;"> + </span> Upload Images</button>
-
     <h2>📂 Albums</h2>
+
+    <button id="uploadBtn"><span style="font-size:18px; font-weight:700;"> + </span> Upload Images</button><br>
+    
+
+    <input type="text" id="searchInput" placeholder="🔍 Search album..." 
+    style="padding:10px 15px; width:100%; max-width:300px; border-radius:6px; border:1px solid #ccc; margin-bottom:20px;">
+
     <div class="folders">
         <?php while($event = mysqli_fetch_assoc($eventsResult)):
             $event_folder = preg_replace('/[^a-zA-Z0-9_-]/', '_', $event['event_name']);
@@ -259,23 +249,8 @@ $totalPages = ceil($totalAlbums / $albumsPerPage);
         </div>
         <?php endwhile; ?>
     </div>
-
-    <!-- Pagination -->
-    <div style="margin-top:30px; text-align:center;">
-        <?php if ($page > 1): ?>
-            <a href="?page=<?= $page-1 ?>" style="margin:0 8px; text-decoration:none; font-weight:600;">⬅ Prev</a>
-        <?php endif; ?>
-        <?php for ($i=1; $i<=$totalPages; $i++): ?>
-            <a href="?page=<?= $i ?>"
-               style="margin:0 6px; padding:6px 10px; border-radius:6px;
-               <?= $i==$page ? 'background:#008736;color:white;' : 'background:#eaeaea;color:#333;' ?>
-               text-decoration:none; font-weight:600;">
-                <?= $i ?>
-            </a>
-        <?php endfor; ?>
-        <?php if ($page < $totalPages): ?>
-            <a href="?page=<?= $page+1 ?>" style="margin:0 8px; text-decoration:none; font-weight:600;">Next ➡</a>
-        <?php endif; ?>
+    <div id="noAlbums" style="text-align:center; margin-top:20px; font-size:16px; color:#555; display:none;">
+        ❌ No albums found.
     </div>
 
 </div>
@@ -503,6 +478,31 @@ uploadMoreBtn.addEventListener('click', () => {
 
     uploadModal.style.display = 'flex';
 });
+
+const searchInput = document.getElementById('searchInput');
+const folders = document.querySelectorAll('.folder');
+const noAlbums = document.getElementById('noAlbums');
+
+searchInput.addEventListener('keyup', function () {
+    const filter = this.value.toLowerCase();
+    let visibleCount = 0;
+
+    folders.forEach(folder => {
+        const albumName = folder.querySelector('.folder-name').innerText.toLowerCase();
+
+        if (albumName.includes(filter)) {
+            folder.style.display = "flex";
+            visibleCount++;
+        } else {
+            folder.style.display = "none";
+        }
+    });
+
+    // Show "No albums found" if nothing matches
+    noAlbums.style.display = visibleCount === 0 ? "block" : "none";
+});
+
+
 </script>
 </body>
 </html>

@@ -242,6 +242,16 @@ button.submit-btn:hover{background:#006626;}
 <?php endif; ?>
 
 <h2>Manage Events</h2>
+<input type="text" id="eventSearch" placeholder="🔍 Search events..."
+style="
+    width:100%;
+    max-width:350px;
+    padding:10px 14px;
+    margin:10px 0 20px;
+    border-radius:6px;
+    border:1px solid #ccc;
+    font-size:15px;
+"><br>
 
 <button class="add-btn" onclick="openModal()"><span style="font-size:18px; font-weight:700;"> + </span> Add New Event</button>
 <form method="POST" style="display:inline;" id="bulkForm">
@@ -260,7 +270,7 @@ button.submit-btn:hover{background:#006626;}
 </tr>
 
 <?php while($row=$events->fetch_assoc()): ?>
-<tr>
+<tr class="event-row">
     <td><input type="checkbox" name="event_ids[]" value="<?= $row['id'] ?>"></td>
     <td>
         <?php if($row['image']): ?>
@@ -287,6 +297,10 @@ button.submit-btn:hover{background:#006626;}
 </tr>
 <?php endwhile; ?>
 </table>
+<div id="noEvents" style="text-align:center; margin-top:20px; font-size:16px; color:#555; display:none;">
+    ❌ No events found.
+</div>
+
 </div>
 </form>
 
@@ -377,6 +391,27 @@ document.querySelectorAll('.read-more').forEach(link=>{
         openDescModal(this.dataset.desc);
     });
 });
+const eventSearch = document.getElementById('eventSearch');
+const eventRows = document.querySelectorAll('.event-row');
+const noEvents = document.getElementById('noEvents');
+
+eventSearch.addEventListener('keyup', function () {
+    const keyword = this.value.toLowerCase();
+    let visibleCount = 0;
+
+    eventRows.forEach(row => {
+        const rowText = row.innerText.toLowerCase();
+        if (rowText.includes(keyword)) {
+            row.style.display = "";
+            visibleCount++;
+        } else {
+            row.style.display = "none";
+        }
+    });
+
+    noEvents.style.display = visibleCount === 0 ? "block" : "none";
+});
+
 </script>
 
 </body>

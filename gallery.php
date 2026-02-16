@@ -225,6 +225,23 @@ h1{
 
 <div id="mainContent">
 <h1>Photo Gallery</h1>
+<div style="display:flex; justify-content:center; margin-bottom:40px;">
+    <input 
+        type="text" 
+        id="eventSearch"
+        placeholder="🔍 Search album..."
+        style="
+            width:100%;
+            max-width:400px;
+            padding:12px 16px;
+            font-size:16px;
+            border-radius:30px;
+            border:1px solid #ccc;
+            outline:none;
+            box-shadow:0 4px 14px rgba(0,0,0,0.1);
+        "
+    >
+</div>
 
 <div class="folders">
 <?php while($eventRow = mysqli_fetch_assoc($eventsResult)):
@@ -232,6 +249,7 @@ h1{
     $safeFolder = preg_replace('/[^a-zA-Z0-9_-]/', '_', $eventName);
     $count = count($grouped[$safeFolder] ?? []);
 ?>
+
 <div class="folder" data-event="<?= $safeFolder ?>" data-name="<?= htmlspecialchars($eventName) ?>">
     <div class="folder-icon"><i class="fa-solid fa-images"></i></div>
     <div class="folder-name"><?= htmlspecialchars($eventName) ?></div>
@@ -239,6 +257,10 @@ h1{
 </div>
 <?php endwhile; ?>
 </div>
+<div id="noAlbums" style="text-align:center; margin-top:30px; font-size:18px; color:#555; display:none;">
+    ❌ No albums found.
+</div>
+
 </div>
 
 <?php include 'includes/footer.php'; ?>
@@ -356,6 +378,29 @@ document.addEventListener('keydown',e=>{
     if(e.key==="ArrowRight") nextImage();
     if(e.key==="Escape") closeLightbox();
 });
+const searchInput = document.getElementById('eventSearch');
+const noAlbums = document.getElementById('noAlbums');
+
+searchInput.addEventListener('keyup', function () {
+    const keyword = this.value.toLowerCase();
+    let visibleCount = 0;
+
+    folders.forEach(folder => {
+        const name = folder.dataset.name.toLowerCase();
+
+        if (name.includes(keyword)) {
+            folder.style.display = "flex";
+            visibleCount++;
+        } else {
+            folder.style.display = "none";
+        }
+    });
+
+    // Show no result message if no folders are visible
+    noAlbums.style.display = visibleCount === 0 ? "block" : "none";
+});
+
+
 </script>
 
 </body>

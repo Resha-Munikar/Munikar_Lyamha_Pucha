@@ -2,7 +2,19 @@
 include 'includes/header.php';
 include 'includes/navbar.php';
 include 'includes/db.php';
-$result = mysqli_query($conn, "SELECT * FROM events ORDER BY id DESC");
+$search = $_GET['search'] ?? '';
+
+if ($search != '') {
+    $stmt = $conn->prepare("SELECT * FROM events 
+        WHERE title LIKE ? OR description LIKE ? OR event_date LIKE ?
+        ORDER BY id DESC");
+    $like = "%$search%";
+    $stmt->bind_param("sss", $like, $like, $like);
+    $stmt->execute();
+    $result = $stmt->get_result();
+} else {
+    $result = mysqli_query($conn, "SELECT * FROM events ORDER BY id DESC");
+}
 ?>
 
 <!DOCTYPE html>
@@ -148,6 +160,23 @@ h1 {
 <body>
 
 <h1>Upcoming Events</h1>
+<div style="display:flex; justify-content:center; margin-bottom:30px;">
+    <input 
+        type="text" 
+        id="eventSearch"
+        placeholder="🔍 Search events..."
+        style="
+            width:100%;
+            max-width:400px;
+            padding:12px 16px;
+            font-size:16px;
+            border-radius:30px;
+            border:1px solid #ccc;
+            outline:none;
+            box-shadow:0 4px 14px rgba(0,0,0,0.1);
+        "
+    >
+</div>
 
 <div class="event-container">
 <?php while($row = mysqli_fetch_assoc($result)): ?>
@@ -166,6 +195,10 @@ h1 {
     </div>
 <?php endwhile; ?>
 </div>
+<div id="noResults" style="text-align:center; margin-top:0px; margin-bottom:20px; font-size:18px; color:#555; display:none;">
+    ❌ No events found.
+</div>
+
 
 <?php include 'includes/footer.php'; ?>
 
@@ -183,6 +216,35 @@ document.querySelectorAll('.read-more').forEach(btn => {
         }
     });
 });
+
+const eventCards = document.querySelectorAll('.event-card');
+const eventSearch = document.getElementById('eventSearch');
+const noResults = document.getElementById('noResults');
+
+eventSearch.addEventListener('keyup', function () {
+    const keyword = this.value.toLowerCase();
+    let visibleCount = 0;
+
+    eventCards.forEach(card => {
+        const title = card.querySelector('h3').innerText.toLowerCase();
+        const desc = card.querySelector('p').innerText.toLowerCase();
+
+        if (title.includes(keyword) || desc.includes(keyword)) {
+            card.style.display = "flex";
+            visibleCount++;
+        } else {
+            card.style.display = "none";
+        }
+    });
+
+    // Show no results message if nothing is visible
+    if (visibleCount === 0) {
+        noResults.style.display = "block";
+    } else {
+        noResults.style.display = "none";
+    }
+});
+
 </script>
 
 </body>
